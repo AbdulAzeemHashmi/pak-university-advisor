@@ -122,7 +122,7 @@ export default function FilterBar({
           </label>
           <select
             value={type}
-            onChange={(e) => setType(e.target.value)}
+            onChange={(e) => setType(e.target.value as "Public" | "Private" | "all")}
             className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#01411C]"
           >
             <option value="all">{t("allTypes")}</option>
