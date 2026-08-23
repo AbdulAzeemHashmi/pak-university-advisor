@@ -14,7 +14,7 @@ export class XataClient extends buildClient() {
   constructor(options = {}) {
     super(
       {
-        databaseUrl: process.env.XATA_DATABASE_URL || "",
+        databaseURL: process.env.XATA_DATABASE_URL || "",
         apiKey: process.env.XATA_API_KEY || "",
         branch: process.env.XATA_BRANCH || "main",
         ...options,
