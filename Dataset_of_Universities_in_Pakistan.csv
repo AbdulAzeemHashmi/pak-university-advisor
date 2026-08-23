@@ -1,0 +1,234 @@
+university_name,location,established_date,campus,specialization,type
+Riphah International University,Islamabad,2002-01-01,"Faisalabad, Lahore, Malakand",General,Private
+Capital University of Science & Technology,Islamabad,1998-01-01,,General,Private
+Quaid-i-Azam University,Islamabad,1967-01-01,,General,Public
+Pakistan Institute of Engineering and Applied Sciences,Islamabad,1967-01-01,,General,Public
+"National Defence University, Pakistan",Islamabad,1970-01-01,,General,Public
+Allama Iqbal Open University,Islamabad,1974-01-01,,General,Public
+"International Islamic University, Islamabad",Islamabad,1980-01-01,,General,Public
+"National University of Sciences and Technology, Pakistan",Islamabad,1991-01-01,,General,Public
+COMSATS University,Islamabad,1998-01-01,"Abbottabad, Attock, Lahore, Vehari, Sahiwal, Wah",General,Public
+National University of Computer and Emerging Sciences,Islamabad,2000-01-01,"Chiniot, Karachi, Lahore, Peshawar",General,Private
+Bahria University,Islamabad,2000-01-01,"Karachi, Lahore",General,Public
+Sir Syed CASE Institute of Technology,Islamabad,2001-01-01,Sheikhupura,General,Private
+"Federal Urdu University of Arts, Science and Technology",Islamabad,1949-01-01,Karachi,General,Public
+Institute of Space Technology,Islamabad,2002-01-01,,General,Public
+"Foundation University, Islamabad",Islamabad,2002-01-01,"Rawalpindi, Sialkot",General,Private
+National University of Modern Languages,Islamabad,1969-01-01,"Faisalabad, Lahore, Multan, Karachi, Hyderabad, Peshawar, Quetta, Gwadar",General,Public
+"Air University, Islamabad",Islamabad,2002-01-01,"Multan, Kamra",General,Public
+Shifa Tameer-e-Millat University,Islamabad,2012-01-01,,General,Private
+Shaheed Zulfiqar Ali Bhutto Medical University,Islamabad,2013-01-01,,Medical,Public
+Muslim Youth University,Islamabad,2015-01-01,,General,Private
+National University of Technology,Islamabad,2018-01-01,,Engineering and Technology,Public
+Pakistan Institute of Development Economics,Islamabad,1957-01-01,,General,Public
+National Skills University,Islamabad,2021-01-01,,Engineering and Technology,Public
+Ibadat International University,Islamabad,1998-01-01,,General,Private
+University of Balochistan,Quetta,1970-01-01,"Mastung, Kharan, Pishin",General,Public
+Balochistan University of Engineering and Technology,Khuzdar,1987-01-01,Hub city (purposed),Engineering and Technology,Public
+Al-Hamd Islamic University,Quetta,1995-01-01,Islamabad,General,Private
+"Balochistan University of Information Technology, Engineering and Management Sciences",Quetta,2002-01-01,Zhob,General,Public
+Sardar Bahadur Khan Women's University,Quetta,2004-01-01,"Noshki, Pishin, Khuzdar
+(purposed)",General,Public
+"Lasbela University of Agriculture, Water and Marine Sciences",Lasbela,2005-01-01,"Wadh, Dera Murad Jamali",General,Public
+University of Turbat,Turbat,2012-01-01,"Gwadar
+(2016-2021)
+Panjgur
+(2020-2022)",General,Public
+University of Loralai,Loralai,2009-01-01,,General,Public
+Mir Chakar Khan Rind University,Sibi,2019-01-01,,General,Public
+University of Gwadar,Gwadar,2021-01-01,,General,Public
+University of Makran,Panjgur,2022-01-01,,General,Public
+"University of Information Technology, Engineering and Management Sciences",Gwadar,,Turbat,Engineering and Technology,Public
+Islamia College University[8],Peshawar,1913-01-01,,General,Public
+Pakistan Military Academy[9][10],Abbotabad,1947-01-01,,General,Military
+Pakistan Air Force Academy,Risalpur,1947-01-01,,General,Military
+University of Peshawar[11][12][13][14],Peshawar,1950-01-01,,General,Public
+Gomal University[15][16][17],Dera Ismail Khan,1974-01-01,Tank[18],General,Public
+"University of Engineering and Technology, Peshawar[19][20]",Peshawar,1980-01-01,"Abbottabad, Bannu, Jalozai, Kohat",General,Public
+"University of Agriculture, Peshawar[21][22][23]",Peshawar,1981-01-01,Mardan,General,Public
+Preston University,Kohat,1984-01-01,"Karachi, Islamabad, Lahore, Peshawar",General,Private
+CECOS University of Information Technology and Emerging Sciences,Peshawar,1986-01-01,,General,Private
+Ghulam Ishaq Khan Institute of Engineering Sciences and Technology,Swabi,1988-01-01,,General,Private
+Kohat University of Science and Technology,Kohat,2001-01-01,Hangu,General,Public
+University of Malakand,Chakdara,2001-01-01,,General,Public
+Qurtuba University,Peshawar,2001-01-01,Dera Ismail Khan,General,Private
+Sarhad University of Science and Information Technology,Peshawar,2001-01-01,United Arab Emirates,General,Private
+"City University of Science and Information Technology, Peshawar",Peshawar,2001-01-01,,General,Private
+Hazara University,Mansehra,2001-01-01,Battagram,General,Public
+Gandhara University,Peshawar,2002-01-01,,General,Private
+"Northern University, Nowshera",Nowshera,2002-01-01,,General,Private
+Institute of Management Sciences Peshawar,Peshawar,2002-01-01,,General,Public
+University of Science and Technology Bannu,Bannu,2005-01-01,,General,Public
+Shaheed Benazir Bhutto Women University,Peshawar,2005-01-01,,General,Public
+Khyber Medical University,Peshawar,2007-01-01,"Abbottabad, Bannu, Dera Ismail Khan, Saidu Sharif",General,Public
+Abasyn University,Peshawar,2007-01-01,Islamabad,General,Private
+Abdul Wali Khan University Mardan,Mardan,2009-01-01,"Chitral, Pabbi",General,Public
+"Shaheed Benazir Bhutto University, Sheringal",Upper Dir,2009-01-01,Chitral,General,Public
+University of Swat,Swat,2009-01-01,,General,Public
+Bacha Khan University,Charsadda,2012-01-01,,General,Public
+University of Haripur,Haripur,2012-01-01,,General,Public
+IQRA National University,Peshawar,2012-01-01,Swat,General,Private
+Khushal Khan Khattak University,Karak,2012-01-01,,General,Public
+University of Swabi,Swabi,2012-01-01,,General,Public
+University of Buner[24],Buner,2012-01-01,,General,Public
+Abbottabad University of Science and Technology,Abbottabad,2015-01-01,,General,Public
+Women University Mardan,Mardan,2016-01-01,,General,Public
+Women University Swabi,Swabi,2016-01-01,,General,Public
+"University of Technology, Nowshera",Nowshera,2016-01-01,,Engineering and Technology,Public
+FATA University,Akhorwal,2016-01-01,,General,Public
+University of Chitral[25],Chitral,2017-01-01,,General,Public
+"University of Engineering and Technology, Mardan[26][27][28]",Mardan,2017-01-01,,Engineering and Technology,Public
+"University of Agriculture, Dera Ismail Khan[27][28]",Dera Ismail Khan,2017-01-01,,General,Public
+University of Lakki Marwat[27][29][28],Lakki Marwat,2017-01-01,,General,Public
+Pak-Austria Fachhochschule: Institute of Applied Sciences and Technology[30],Haripur,2020-01-01,,General,Public
+University of Dir,Timergara,2021-01-01,,General,Public
+King Edward Medical University,Lahore,1860-01-01,,General,Public
+"University of Engineering and Technology, Lahore",Lahore,1921-01-01,"Faisalabad, Sheikhupura, Gujranwala, Narowal",General,Public
+Forman Christian College,Lahore,1864-01-01,,General,Private
+National College of Arts,Lahore,1875-01-01,Rawalpindi,General,Public
+University of Veterinary and Animal Sciences,Lahore,1882-01-01,"Jhang, Pattoki, Narowal, Layyah",General,Public
+University of the Punjab,Lahore,1882-01-01,"Gujranwala, Jhelum, Khanspur",General,Public
+Punjab Tianjin University of Technology,Lahore,2018-01-01,,Engineering and Technology,Public
+"University of Agriculture, Faisalabad",Faisalabad,1906-01-01,"Burewala, Toba Tek Singh, Depalpur",General,Public
+Namal Institute,Mianwali,2008-01-01,,Engineering and Technology,Private
+Kinnaird College for Women University,Lahore,1913-01-01,,General,Public
+"Government College University, Lahore",Lahore,1864-01-01,,General,Public
+Lahore College for Women University,Lahore,1922-01-01,Jhang,General,Public
+"Government College University, Faisalabad",Faisalabad,1897-01-01,"Layyah, Sahiwal, Chiniot",General,Public
+Fatima Jinnah Medical University,Lahore,1948-01-01,,Medical,Public
+National Textile University,Faisalabad,1959-01-01,Karachi,General,Public
+Pir Mehr Ali Shah Arid Agriculture University,Rawalpindi,1970-01-01,,General,Public
+Bahauddin Zakariya University,Multan,1975-01-01,"Layyah, Vehari",General,Public
+The Islamia University of Bahawalpur,Bahawalpur,1975-01-01,"Bahawalnagar, Rahim Yar Khan",General,Public
+"University of Engineering and Technology, Taxila",Taxila,1975-01-01,,General,Public
+Lahore University of Management Sciences,Lahore,1984-01-01,,General,Private
+NFC Institute of Engineering and Technology,Multan,1985-01-01,,General,Public
+"Institute of Management Sciences, Lahore",Lahore,1987-01-01,,General,Private
+"University of Management and Technology, Lahore",Lahore,1990-01-01,Sialkot,General,Private
+National College of Business Administration and Economics,Lahore,1994-01-01,"Multan, Bahawalpur, Rahim Yar Khan",General,Private
+University of Central Punjab,Lahore,2002-01-01,,General,Private
+Fatima Jinnah Women University,Rawalpindi,1998-01-01,,General,Public
+University of Sargodha,Sargodha,2002-01-01,Bhakkar,General,Public
+"University of Health Sciences, Lahore",Lahore,2002-01-01,,General,Public
+University of Education,Lahore,2002-01-01,"Attock, Dera Ghazi Khan, Faisalabad, Jauharabad, Multan, Vehari",General,Public
+GIFT University,Gujranwala,2002-01-01,,General,Private
+Hajvery University,Lahore,2002-01-01,Sheikhupura,General,Private
+Faisalabad Medical University,Faisalabad,1973-01-01,,General,Public
+University of Faisalabad,Faisalabad,2002-01-01,,General,Private
+University of Lahore,Lahore,1999-01-01,"Gujrat, Sargodha, Pakpattan",General,Private
+Beaconhouse National University,Lahore,2003-01-01,,General,Private
+University of South Asia,Lahore,2003-01-01,,General,Private
+University of Gujrat,Gujrat,2004-01-01,"Lahore, Rawalpindi, Narowal, Mandi Bahauddin",General,Public
+Superior University,Lahore,2004-01-01,,General,Private
+"Minhaj University, Lahore",Lahore,2005-01-01,,General,Private
+HITEC University,Taxila,2007-01-01,,General,Private
+University of Wah,Wah,2009-01-01,,General,Private
+Pakistan Institute of Fashion and Design,Lahore,1994-01-01,,General,Public
+Women University Multan,Multan,2010-01-01,,General,Public
+Institute of Southern Punjab,Multan,2010-01-01,,General,Private
+Qarshi University,Lahore,2011-01-01,,General,Private
+"Government College Women University, Sialkot",Sialkot,2012-01-01,,General,Public
+Government Sadiq College Women University,Bahawalpur,2012-01-01,,General,Public
+Ghazi University,Dera Ghazi Khan,2012-01-01,,General,Public
+"Government College Women University, Faisalabad",Faisalabad,2012-01-01,,General,Public
+Information Technology University (Lahore),Lahore,2012-01-01,,General,Public
+Muhammad Nawaz Sharif University of Agriculture,Multan,2012-01-01,,General,Public
+Muhammad Nawaz Sharif University of Engineering and Technology,Multan,2012-01-01,,General,Public
+Virtual University of Pakistan,Lahore,2002-01-01,Across the entire Pakistan,General,Public
+Lahore Garrison University,Lahore,2012-01-01,,General,Private
+Cholistan University of Veterinary and Animal Sciences,Bahawalpur,2014-01-01,,Agriculture and Veterinary,Public
+Khawaja Fareed University of Engineering and Information Technology,Rahim Yar Khan,2014-01-01,,General,Public
+"University of Engineering and Technology, Rasul",Mandi Bahauddin,1873-01-01,,General,Public
+University of Sahiwal,Sahiwal,2015-01-01,,General,Public
+University of Okara,Okara,2015-01-01,,General,Public
+University of Jhang,Jhang,2015-01-01,,General,Public
+NUR International University,Lahore,2015-01-01,,General,Private
+University of Sialkot,Sialkot,2013-01-01,,General,Private
+Lahore School of Economics,Lahore,1997-01-01,,Medical,Public
+Rawalpindi Medical University,Rawalpindi,1974-01-01,,Medical,Public
+Nishtar Medical University,Multan,1951-01-01,,Medical,Public
+National University of Medical Sciences,Rawalpindi,2015-01-01,,Medical,Public
+University of Home Economics Lahore,Lahore,1955-01-01,,General,Public
+Mir Chakar Khan Rind University of Technology,Dera Ghazi Khan,2019-01-01,,Engineering and Technology,Public
+Rawalpindi Women University,Rawalpindi,1950-01-01,,General,Public
+Institute for Art and Culture,Lahore,2019-01-01,,Arts and Design,Public
+University of Narowal,Narowal,2014-01-01,,General,Public
+Al-Qadir University[31][32],Sohawa,2021-01-01,,Sufism,Public
+Baba Guru Nanak University,Nankana Sahib,2021-01-01,,General,Public
+University of Chakwal,Chakwal,2020-01-01,,General,Public
+University of Mianwali,Mianwali,2020-01-01,,General,Public
+Thal University,Bhakkar,2021-01-01,,General,Public
+Green International University,Lahore,2020-01-01,,General,Private
+Kohsar University Murree,Murree,2021-01-01,,General,Public
+Lahore Institute of Science and Technology,Lahore,2022-01-01,,General,Private
+Grand Asian University Sialkot,Sialkot,2022-01-01,,General,Private
+Government Viqar-un-Nisa Women University,Rawalpindi,2022-01-01,,General,Public
+Liaquat University of Medical and Health Sciences,Jamshoro,1881-01-01,,General,Public
+Sindh Madressatul Islam University,Karachi,1885-01-01,,General,Public
+NED University of Engineering and Technology,Karachi,1922-01-01,Tharparkar,General,Public
+Dow University of Health Sciences,Karachi,1945-01-01,,General,Public
+University of Sindh,Jamshoro,1947-01-01,"Hyderabad,Larkana,Badin, Dadu, Mirpur Khas,Naushahro Feroze, Thatta, Bhit Shah,",General,Public
+University of Karachi,Karachi,1951-01-01,,General,Public
+"Institute of Business Administration, Karachi",Karachi,1955-01-01,,General,Public
+Dawood University of Engineering and Technology,Karachi,1962-01-01,,General,Public
+Mehran University of Engineering and Technology,Jamshoro,1963-01-01,"Khairpur, Sujawal, Jacobabad,",General,Public
+Pakistan Naval Academy,Karachi,1970-01-01,,General,Military
+Shah Abdul Latif University,Khairpur,1974-01-01,"Ghotki, Shikarpur,Shahdadkot",General,Public
+"Quaid-e-Awam University of Engineering, Science and Technology",Benazirabad,1974-01-01,Larkana,General,Public
+Sindh Agriculture University,Tandojam,1977-01-01,"Dokri, Khairpur, Umerkot",General,Public
+Indus Valley School of Art and Architecture,Karachi,1989-01-01,,General,Private
+Baqai Medical University,Karachi,1989-01-01,,General,Private
+Hamdard University,Karachi,1991-01-01,Islamabad,General,Private
+Commecs institute of business and emerging sciences,Karachi,1993-01-01,,General,Private
+Sir Syed University of Engineering and Technology,Karachi,1993-01-01,,General,Private
+Sukkur Institute of Business Administration (IBA) University,Sukkur,1994-01-01,"Hyderabad, Larkana, Mirpurkhas",General,Public
+Textile Institute of Pakistan,Karachi,1994-01-01,,General,Private
+Institute of Business Management,Karachi,1995-01-01,,General,Private
+Shaheed Zulfiqar Ali Bhutto Institute of Science and Technology,Karachi,1995-01-01,"Hyderabad, Islamabad, Larkana, United Arab Emirates",General,Private
+Isra University,Hyderabad,1997-01-01,"Islamabad, Karachi",General,Private
+Karachi Institute of Economics and Technology,Karachi,1997-01-01,,General,Private
+"Greenwich University, Karachi",Karachi,1987-01-01,Mauritius,General,Private
+Jinnah University for Women,Karachi,1998-01-01,,General,Private
+Iqra University,Karachi,1998-01-01,"Islamabad, Quetta",General,Private
+Dadabhoy Institute of Higher Education,Karachi,2000-01-01,,General,Private
+Ilma University,Karachi,2001-01-01,,General,Private
+Preston Institute of Management Sciences and Technology,Karachi,2001-01-01,,General,Private
+Indus University,Karachi,2004-01-01,,General,Private
+University of EAST,Hyderabad,2004-01-01,,General,Private
+Aga Khan University,Karachi,1983-01-01,London[33],General,Private
+Shaheed Mohtarma Benazir Bhutto Medical University,Larkana,2008-01-01,,General,Public
+Muhammad Ali Jinnah University,Karachi,1998-01-01,,General,Private
+Sindh Institute of Medical Sciences,Karachi,2009-01-01,,General,Private
+Karachi School for Business and Leadership,Karachi,2009-01-01,,General,Private
+Habib University,Karachi,2009-01-01,,General,Private
+Benazir Bhutto Shaheed University,Karachi,2010-01-01,,General,Public
+"Shaheed Benazir Bhutto University, Benazirabad",Benazirabad,2010-01-01,"Sanghar, Naushehro Feroze",General,Public
+KASB Institute of Technology,Karachi,2011-01-01,,General,Private
+Pir Abdul Qadir Shah Jeelani Institute of Medical Sciences,Khairpur,2003-01-01,,General,Public
+Jinnah Sindh Medical University,Karachi,1973-01-01,,General,Public
+Shaheed Zulfiqar Ali Bhutto University of Law,Karachi,2012-01-01,,General,Public
+DHA Suffa University,Karachi,2002-01-01,,General,Private
+Nazeer Hussain University,Karachi,2012-01-01,,General,Private
+Peoples University of Medical and Health Sciences for Women,Benazirabad,2013-01-01,,General,Public
+Shaheed Benazir Bhutto University of Veterinary and Animal Sciences,Benazirabad,2013-01-01,,General,Public
+Newports Institute of Communications and Economics,Karachi,2013-01-01,,General,Private
+Shaheed Benazir Bhutto City University,Karachi,2013-01-01,,General,Private
+Shaheed Benazir Bhutto Dewan University,Karachi,2013-01-01,,General,Private
+"Hyderabad Institute of Arts, Science and Technology",Hyderabad,2013-01-01,,General,Private
+Qalandar Shahbaz University of Modern Sciences,Karachi,2013-01-01,,General,Private
+Benazir Bhutto Shaheed University of Technology and Skill Development,Khairpur,1950-01-01,,Engineering and Technology,Public
+Begum Nusrat Bhutto Women University,Sukkur,2018-01-01,,General,Public
+University of Sufism and Modern Sciences,Bhit Shah,2011-01-01,,General,Public
+Government College University Hyderabad,Hyderabad,1917-01-01,,General,Public
+Shaikh Ayaz University,Shikarpur,2011-01-01,,General,Public
+Ziauddin University,Karachi,1986-01-01,,General,Public
+Salim Habib University,Karachi,2015-01-01,,General,Private
+Mirpur University of Science and Technology,Mirpur,2008-01-01,Bhimber,General,Public
+University of Azad Jammu and Kashmir,Muzaffarabad,1980-01-01,"Neelam, Jhelum Valley",General,Public
+University of Poonch,Rawalakot,2014-01-01,"Sudhanoti, Haveli",General,Public
+Al-Khair University,Mirpur,1994-01-01,,General,Private
+Mohi-ud-Din Islamic University,Nerian Sharif,2000-01-01,,General,Private
+Women University of Azad Jammu and Kashmir Bagh,Bagh,2013-01-01,,General,Public
+University of Kotli,Kotli,2014-01-01,,General,Public
+Karakoram International University,Gilgit,2002-01-01,"Hunza Valley, Ghizar, Chilas",General,Public
+Baltistan University,Skardu,2017-01-01,,General,Public
