@@ -121,6 +121,25 @@ XATA_BRANCH=main
 - The current university read layer uses the processed local dataset. Review the Xata setup before treating remote persistence as enabled in production.
 - Never commit `.env.local` or expose server only keys in client code.
 
+## ⚠️ Current Limitations and Zero Cost Plan
+
+This project is intentionally designed to run without paid services or a credit card. The following limitations are explicit:
+
+- **Local account storage:** accounts, reset tokens, and shortlists are stored in ignored `data/runtime/store.json`. This works for local development, but files are not durable across many serverless deployments or multiple application instances.
+- **No paid email requirement:** without Resend, local development shows a temporary reset code. Production email delivery requires a configured mail provider and verified sending domain.
+- **No guaranteed AI quota:** the AI feature falls back to a local bilingual response when OpenRouter is unavailable. Free model availability and quotas can change.
+- **Estimated fees:** source datasets do not provide a reliable standardized annual fee field, so fee values remain estimates and must be verified with each institution.
+- **Verified scholarships only:** preprocessing no longer labels universities as eligible based on sector or city assumptions. Scholarship rows should be generated from an official page and checked manually.
+- **Scraping is best effort:** the standard-library scrapers use HTTPS, response decoding, HTML text extraction, timeouts, and source URLs, but official page structure changes can still require parser updates.
+- **No automated test suite yet:** lint, TypeScript, build, Python syntax, and dataset regeneration checks are available, but user-flow regression tests should be added next.
+
+### Planned free improvements
+
+1. Add a small local test suite for registration, login, reset expiry, shortlist authorization, filtering, and preprocessing.
+2. Add source URLs, retrieval dates, verification status, and fee confidence to every university record.
+3. Replace estimated programs and fees with institution-specific values from official pages or manually reviewed public datasets.
+4. Add a free, durable database only when a suitable provider is available without payment verification. Until then, keep the local file store clearly marked as development storage.
+
 ## 📂 Repository Map
 
 ```text

@@ -225,7 +225,7 @@ export default function FilterBar({
           <span className="font-bold text-slate-400 text-[11px] uppercase">Active Tags:</span>
           {searchQuery && (
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-900 font-semibold">
-              "{searchQuery}"
+              &quot;{searchQuery}&quot;
               <button onClick={removeSearchQuery} className="hover:text-red-600"><X className="w-3 h-3" /></button>
             </span>
           )}
