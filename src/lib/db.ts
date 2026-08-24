@@ -1,10 +1,6 @@
 import { University, SearchFilters, PaginatedResult } from "@/types";
 import { getLocalMasterUniversities } from "@/lib/xata";
-
-// Memory storage for user shortlist when running without remote DB
-const inMemoryShortlists: Record<string, string[]> = {
-  "demo-user": ["uni_1", "uni_3", "uni_6"]
-};
+import { getStoredShortlist, updateStoredShortlist } from "@/lib/local-store";
 
 export async function fetchUniversities(filters: SearchFilters): Promise<PaginatedResult<University>> {
   const allUniversities = getLocalMasterUniversities();
@@ -108,24 +104,17 @@ export async function fetchScholarshipUniversities(city?: string, degree?: strin
 
 export async function getShortlist(userId: string): Promise<University[]> {
   const all = getLocalMasterUniversities();
-  const uniIds = inMemoryShortlists[userId] || [];
+  const uniIds = await getStoredShortlist(userId);
   return all.filter(u => uniIds.includes(u.id));
 }
 
 export async function addToShortlist(userId: string, universityId: string): Promise<boolean> {
-  if (!inMemoryShortlists[userId]) {
-    inMemoryShortlists[userId] = [];
-  }
-  if (!inMemoryShortlists[userId].includes(universityId)) {
-    inMemoryShortlists[userId].push(universityId);
-  }
+  await updateStoredShortlist(userId, universityId, true);
   return true;
 }
 
 export async function removeFromShortlist(userId: string, universityId: string): Promise<boolean> {
-  if (inMemoryShortlists[userId]) {
-    inMemoryShortlists[userId] = inMemoryShortlists[userId].filter(id => id !== universityId);
-  }
+  await updateStoredShortlist(userId, universityId, false);
   return true;
 }
 

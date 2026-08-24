@@ -2,7 +2,8 @@ import csv
 import os
 import json
 import urllib.request
-import ssl
+import html as html_parser
+import re
 
 def scrape_usaid_scholarship_universities():
     """
@@ -18,33 +19,31 @@ def scrape_usaid_scholarship_universities():
 
     usaid_list = []
 
-    ctx = ssl.create_default_context()
-    ctx.check_hostname = False
-    ctx.verify_mode = ssl.CERT_NONE
-
     req = urllib.request.Request(
         url,
         headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
     )
 
+    page_html = ""
     try:
-        with urllib.request.urlopen(req, context=ctx, timeout=10) as resp:
-            html = resp.read().decode('utf-8', errors='ignore')
-            print(f"Connected to USAID MNBSP Portal successfully. Response length: {len(html)} bytes.")
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            page_html = resp.read().decode(resp.headers.get_content_charset() or 'utf-8', errors='strict')
+            print(f"Connected to USAID MNBSP Portal successfully. Response length: {len(page_html)} bytes.")
     except Exception as e:
         print(f"USAID Portal request notice ({e}). Using processed dataset verification fallback...")
 
     if os.path.exists(master_json):
         with open(master_json, 'r', encoding='utf-8') as f:
             unis = json.load(f)
+            page_text = re.sub(r'<[^>]+>', ' ', html_parser.unescape(page_html)).lower()
             for u in unis:
-                if u.get("has_usaid_scholarship"):
+                if u["name"].lower() in page_text:
                     usaid_list.append({
                         "university_name": u["name"],
                         "city": u["city"],
                         "focal_person": f"USAID Focal Officer - {u['name']}",
-                        "coverage": "Full Tuition + Lodging + Books & Living Allowance",
-                        "source": "USAID MNBSP Partner"
+                        "coverage": "See the official USAID or HEC announcement for current coverage and eligibility.",
+                        "source": url
                     })
 
     with open(out_csv, 'w', newline='', encoding='utf-8') as f:

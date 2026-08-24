@@ -59,25 +59,27 @@ export default function UniversitiesSearchClient({
     fetchResults();
   }, [filters]);
 
+  useEffect(() => {
+    fetch("/api/shortlist")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => setShortlistedIds(json?.shortlist?.map((university: University) => university.id) || []))
+      .catch(() => setShortlistedIds([]));
+  }, []);
+
   const handleFilterChange = (newFilters: SearchFilters) => {
     setFilters((prev) => ({ ...prev, ...newFilters }));
   };
 
-  const handleToggleShortlist = (id: string) => {
-    if (shortlistedIds.includes(id)) {
-      setShortlistedIds(shortlistedIds.filter((item) => item !== id));
-      fetch("/api/shortlist", {
-        method: "DELETE",
+  const handleToggleShortlist = async (id: string) => {
+    const removing = shortlistedIds.includes(id);
+    setShortlistedIds(removing ? shortlistedIds.filter((item) => item !== id) : [...shortlistedIds, id]);
+    const response = await fetch("/api/shortlist", {
+        method: removing ? "DELETE" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ universityId: id })
       });
-    } else {
-      setShortlistedIds([...shortlistedIds, id]);
-      fetch("/api/shortlist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ universityId: id })
-      });
+    if (!response.ok) {
+      setShortlistedIds((current) => removing ? [...current, id] : current.filter((item) => item !== id));
     }
   };
 

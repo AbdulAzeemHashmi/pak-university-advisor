@@ -5,7 +5,8 @@ import { auth } from "@/lib/auth";
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
-    const userId = session?.user?.id || "demo-user";
+    const userId = session?.user?.id;
+    if (!userId) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
 
     const shortlist = await getShortlist(userId);
     return NextResponse.json({ shortlist });
@@ -18,7 +19,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
-    const userId = session?.user?.id || "demo-user";
+    const userId = session?.user?.id;
+    if (!userId) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
 
     const body = await request.json();
     const { universityId } = body;
@@ -38,7 +40,8 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const session = await auth();
-    const userId = session?.user?.id || "demo-user";
+    const userId = session?.user?.id;
+    if (!userId) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
 
     const body = await request.json();
     const { universityId } = body;

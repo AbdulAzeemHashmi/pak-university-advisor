@@ -30,6 +30,17 @@ export default function SignupPage() {
     setError(null);
 
     try {
+      const registerRes = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password })
+      });
+      const registerJson = await registerRes.json();
+      if (!registerRes.ok) {
+        setError(registerJson.error || "Could not register account. Please try again.");
+        return;
+      }
+
       const result = await signIn("credentials", {
         email,
         password,
@@ -37,7 +48,7 @@ export default function SignupPage() {
       });
 
       if (result?.error) {
-        setError("Could not register account. Please try again.");
+        setError("Account created, but sign in failed. Please sign in manually.");
       } else {
         router.push("/shortlist");
       }

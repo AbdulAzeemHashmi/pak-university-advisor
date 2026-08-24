@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "crypto";
-
-// In-memory store for dev OTP codes (per session — NOT for production)
-// In production with a real Resend domain + DATABASE_URL this would be persisted to the DB
-const devOtpStore: Map<string, { code: string; expires: number }> = new Map();
+import { createResetToken } from "@/lib/local-store";
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,9 +14,7 @@ export async function POST(req: NextRequest) {
 
     // Generate a secure 6-digit OTP code
     const otp = randomBytes(3).readUIntBE(0, 3).toString().padStart(6, "0").slice(0, 6);
-    const expires = Date.now() + 15 * 60 * 1000; // 15 minutes
-
-    devOtpStore.set(normalizedEmail, { code: otp, expires });
+    await createResetToken(normalizedEmail, otp);
 
     // Attempt to send real email via Resend if configured
     const resendApiKey = process.env.RESEND_API_KEY;
@@ -65,10 +60,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // DEV FALLBACK: Return the OTP code in the response body
-    // This is intentionally shown only in development without a real Resend domain
+    // The local fallback keeps the project usable without a paid email provider.
     console.log(`[DEV] Password reset OTP for ${normalizedEmail}: ${otp}`);
-    return NextResponse.json({ success: true, devCode: otp });
+    return NextResponse.json({ success: true, ...(process.env.NODE_ENV !== "production" ? { devCode: otp } : {}) });
   } catch (err) {
     console.error("Forgot password error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -85,19 +79,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ valid: false, error: "Email and code are required" }, { status: 400 });
   }
 
-  const entry = devOtpStore.get(email);
-  if (!entry) {
-    return NextResponse.json({ valid: false, error: "No active reset request for this email" }, { status: 404 });
-  }
-
-  if (Date.now() > entry.expires) {
-    devOtpStore.delete(email);
-    return NextResponse.json({ valid: false, error: "Code has expired. Please request a new one." }, { status: 410 });
-  }
-
-  if (entry.code !== code) {
-    return NextResponse.json({ valid: false, error: "Invalid code" }, { status: 401 });
-  }
-
-  return NextResponse.json({ valid: true });
+  const { verifyResetToken } = await import("@/lib/local-store");
+  const valid = await verifyResetToken(email, code);
+  return NextResponse.json({ valid, ...(valid ? {} : { error: "Invalid or expired reset code" }) }, { status: valid ? 200 : 401 });
 }

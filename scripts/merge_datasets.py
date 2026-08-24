@@ -18,6 +18,9 @@ def clean_website(website_raw, name_clean):
         return "https://" + w
     return w
 
+def normalize_name(value):
+    return re.sub(r'[^a-z0-9]', '', clean_string(value).lower())
+
 def clean_image_url(img_raw):
     if not img_raw:
         return "https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=600&q=80"
@@ -26,6 +29,14 @@ def clean_image_url(img_raw):
         return "https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=600&q=80"
     if img.startswith("/"):
         return "https://www.hec.gov.pk" + img
+    return img
+
+def extract_phone_and_email(contact_str):
+    if not contact_str:
+        return "", ""
+    phones = re.findall(r'[\+\(]?[0-9][0-9\-\s\(\)\.]{7,}[0-9]', contact_str)
+    emails = re.findall(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', contact_str)
+    return (phones[0].strip() if phones else "", emails[0].strip() if emails else "")
     return img
 
 def extract_phone_and_email(contact_str):
@@ -85,12 +96,9 @@ def merge_datasets():
                 uname = clean_string(row.get("University Name"))
                 rank = clean_string(row.get("Rank"))
                 if uname and rank:
-                    try:
-                        rankings_map[uname.lower()[:12]] = int(rank)
-                    except:
-                        pass
-
-    hec_eligible_cities = ["Islamabad", "Lahore", "Karachi", "Peshawar", "Quetta", "Faisalabad", "Multan", "Jamshoro", "Hyderabad", "Muzaffarabad", "Gilgit", "Bahawalpur", "Taxila", "Mardan", "Khairpur", "Rawalpindi", "Swat"]
+                    rank_match = re.search(r'\d+', rank)
+                    if rank_match:
+                        rankings_map[normalize_name(uname)] = int(rank_match.group())
 
     if os.path.exists(file1):
         with open(file1, mode='r', encoding='utf-8-sig', errors='replace') as f:
@@ -135,7 +143,6 @@ def merge_datasets():
                     match = re.search(r'\b(18|19|20)\d{2}\b', established_raw)
                     if match:
                         est_year = int(match.group())
-
                 name_low = name.lower()
                 name_domain = re.sub(r'[^a-z0-9]', '', name_low)
 
@@ -154,10 +161,10 @@ def merge_datasets():
                 elif uni_type == "Public":
                     fee_max = 45000 + (idx % 6) * 12000
 
-                has_hec = True if uni_type == "Public" or city in hec_eligible_cities else False
-                has_usaid = True if ("nust" in name_low or "qau" in name_low or "lums" in name_low or "uab" in name_low or "uet" in name_low or "comsats" in name_low or "agriculture" in name_low or uni_type == "Public") else False
+                has_hec = False
+                has_usaid = False
 
-                ranking = rankings_map.get(name_low[:12])
+                ranking = rankings_map.get(normalize_name(name))
 
                 # Program offerings based on category
                 if "medical" in category.lower() or "health" in name_low or "medical" in name_low:
@@ -197,9 +204,9 @@ def merge_datasets():
                     "fee_range_max": fee_max,
                     "has_hec_scholarship": has_hec,
                     "has_usaid_scholarship": has_usaid,
-                    "scholarship_programs": (["HEC Need-Based Scholarship"] if has_hec else []) + (["USAID Merit and Needs-Based Scholarship"] if has_usaid else []) + ["University Financial Aid"],
+                    "scholarship_programs": [],
                     "financial_aid_office": contact_info or f"Financial Aid Office, {name}, {city}. Email: financialaid@{name_domain}.edu.pk | Phone: +92-51-111-000-111",
-                    "scholarship_details": f"Covers up to 100% tuition fees and provides monthly stipend for eligible low-income students at {name}.",
+                    "scholarship_details": "Scholarship availability and coverage must be verified with the university financial aid office.",
                     "programs": progs
                 })
 

@@ -102,3 +102,9 @@ export async function updateStoredShortlist(userId: string, universityId: string
   store.shortlists[userId] = Array.from(shortlist);
   await writeStore(store);
 }
+
+export async function verifyResetToken(email: string, code: string) {
+  const store = await readStore();
+  const token = store.resetTokens.find((item) => item.email === email);
+  return Boolean(token && token.expiresAt >= Date.now() && await bcrypt.compare(code, token.codeHash));
+}

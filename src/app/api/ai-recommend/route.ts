@@ -1,12 +1,37 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchUniversities } from "@/lib/db";
 
+const requestCounts = new Map<string, { count: number; resetAt: number }>();
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { budget, location, degree, academicMarks } = body;
 
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
+    const now = Date.now();
+    const current = requestCounts.get(ip);
+    if (current && current.resetAt > now && current.count >= 10) {
+      return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+    }
+    requestCounts.set(ip, current && current.resetAt > now
+      ? { count: current.count + 1, resetAt: current.resetAt }
+      : { count: 1, resetAt: now + 60 * 60 * 1000 });
+
+    if (location !== undefined && (typeof location !== "string" || location.length > 80)) {
+      return NextResponse.json({ error: "Location is invalid." }, { status: 422 });
+    }
+    if (degree !== undefined && (typeof degree !== "string" || degree.length > 100)) {
+      return NextResponse.json({ error: "Degree is invalid." }, { status: 422 });
+    }
+    if (academicMarks !== undefined && (typeof academicMarks !== "string" || academicMarks.length > 100)) {
+      return NextResponse.json({ error: "Academic marks are invalid." }, { status: 422 });
+    }
+
     const numBudget = Number(budget) || 250000;
+    if (numBudget < 0 || numBudget > 100000000) {
+      return NextResponse.json({ error: "Budget is outside the supported range." }, { status: 422 });
+    }
     const locStr = location || "Lahore";
     const degStr = degree || "Computer Science";
     const marksStr = academicMarks ? `(Academic Record: ${academicMarks})` : "";
