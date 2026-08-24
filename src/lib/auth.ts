@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { authenticateUser } from "@/lib/local-store";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
@@ -14,16 +15,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
-        const email = credentials.email as string;
-        // Basic user authentication check for demonstration / mock support
-        if (email) {
-          return {
-            id: "demo-user-1",
-            name: email.split("@")[0].toUpperCase(),
-            email: email,
-          };
-        }
-        return null;
+        return authenticateUser(credentials.email as string, credentials.password as string);
       }
     })
   ],
@@ -41,5 +33,5 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session;
     }
   },
-  secret: process.env.AUTH_SECRET || "pak_university_advisor_default_secret_key_12345",
+  secret: process.env.AUTH_SECRET || "local-development-secret-change-me",
 });
