@@ -1,32 +1,82 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
-import { GraduationCap, Lock, CheckCircle2, Loader2 } from "lucide-react";
+import { GraduationCap, Lock, CheckCircle2, Loader2, Info, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useSearchParams } from "next/navigation";
 
 export default function ResetPasswordPage() {
   const t = useTranslations("auth");
   const router = useRouter();
+  const searchParams = useSearchParams();
 
+  const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Pre-fill email & code from URL params (deep link from email or dev fallback)
+  useEffect(() => {
+    const urlEmail = searchParams.get("email");
+    const urlCode = searchParams.get("code");
+    if (urlEmail) setEmail(urlEmail);
+    if (urlCode) setCode(urlCode);
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+
     if (password !== confirmPassword) {
-      alert("Passwords do not match.");
+      setError("Passwords do not match.");
       return;
     }
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+
     setLoading(true);
-    setTimeout(() => {
+
+    try {
+      // 1. Verify OTP code via API
+      const verifyRes = await fetch(
+        `/api/auth/forgot-password?email=${encodeURIComponent(email)}&code=${code}`
+      );
+      const verifyJson = await verifyRes.json();
+
+      if (!verifyJson.valid) {
+        setError(verifyJson.error || "Invalid or expired reset code. Please request a new one.");
+        setLoading(false);
+        return;
+      }
+
+      // 2. Submit new password to NextAuth credentials update endpoint
+      const updateRes = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, code, password })
+      });
+
+      if (!updateRes.ok) {
+        const updateJson = await updateRes.json();
+        setError(updateJson.error || "Failed to reset password. Please try again.");
+      } else {
+        setSuccess(true);
+        setTimeout(() => router.push("/auth/login"), 3000);
+      }
+    } catch {
+      setError("A network error occurred. Please try again.");
+    } finally {
       setLoading(false);
-      setSuccess(true);
-    }, 1000);
+    }
   };
 
   return (
@@ -37,7 +87,7 @@ export default function ResetPasswordPage() {
             <GraduationCap className="w-7 h-7" />
           </div>
           <h2 className="text-2xl font-black text-slate-900">Set New Password</h2>
-          <p className="text-xs text-slate-500">Enter your new secure password below</p>
+          <p className="text-xs text-slate-500">Enter the 6-digit code from your email and choose a new password</p>
         </div>
 
         {success ? (
@@ -45,7 +95,7 @@ export default function ResetPasswordPage() {
             <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
             <h3 className="font-bold text-sm text-emerald-900">Password Reset Complete!</h3>
             <p className="text-xs text-emerald-700">
-              Your password has been successfully updated. You can now log in with your new credentials.
+              Your password has been successfully updated. Redirecting to Sign In…
             </p>
             <Link href="/auth/login">
               <Button className="mt-2 bg-[#01411C] hover:bg-[#1A8F3C] text-white text-xs font-bold px-6 py-2 rounded-xl">
@@ -55,6 +105,58 @@ export default function ResetPasswordPage() {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
+
+            {/* Dev-mode banner if code is pre-filled from fallback */}
+            {code && (
+              <div className="bg-amber-50 border border-amber-300 rounded-xl p-3 flex items-start gap-2">
+                <Info className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                <p className="text-xs text-amber-800">
+                  <strong>Dev Mode:</strong> Reset code pre-filled from the forgot password page. Enter your email and new password to complete.
+                </p>
+              </div>
+            )}
+
+            {/* Error display */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-xs text-red-800 font-medium">
+                {error}
+              </div>
+            )}
+
+            {/* Email */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700">{t("emailLabel")}</label>
+              <div className="relative">
+                <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="student@example.pk"
+                  className="pl-10 rounded-xl text-xs"
+                />
+              </div>
+            </div>
+
+            {/* OTP Code */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                <KeyRound className="w-3.5 h-3.5 text-[#01411C]" />
+                6-Digit Reset Code
+              </label>
+              <Input
+                type="text"
+                required
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                placeholder="123456"
+                maxLength={6}
+                className="rounded-xl text-sm font-mono tracking-widest text-center"
+              />
+            </div>
+
+            {/* New Password */}
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-700">{t("passwordLabel")}</label>
               <div className="relative">
@@ -70,6 +172,7 @@ export default function ResetPasswordPage() {
               </div>
             </div>
 
+            {/* Confirm Password */}
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-700">{t("confirmPasswordLabel")}</label>
               <div className="relative">
@@ -96,6 +199,12 @@ export default function ResetPasswordPage() {
                 <span>Update Password</span>
               )}
             </Button>
+
+            <div className="text-center pt-1">
+              <Link href="/auth/forgot-password" className="text-xs font-semibold text-slate-500 hover:text-[#01411C]">
+                Didn&apos;t receive a code? Request again
+              </Link>
+            </div>
           </form>
         )}
       </div>

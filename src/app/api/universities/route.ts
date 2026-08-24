@@ -8,6 +8,8 @@ export async function GET(request: NextRequest) {
     const city = searchParams.get("city") || undefined;
     const province = searchParams.get("province") || undefined;
     const degree = searchParams.get("degree") || undefined;
+    const category = searchParams.get("category") || undefined;
+    const distanceEducation = searchParams.get("distanceEducation") === "true";
     const maxFeeStr = searchParams.get("maxFee");
     const type = (searchParams.get("type") as "Public" | "Private" | "all") || undefined;
     const searchQuery = searchParams.get("searchQuery") || undefined;
@@ -22,6 +24,8 @@ export async function GET(request: NextRequest) {
       city,
       province,
       degree,
+      category,
+      distanceEducation,
       maxFee,
       type,
       searchQuery,

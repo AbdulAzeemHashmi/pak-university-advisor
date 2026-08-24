@@ -36,6 +36,14 @@
     "allProvinces": "تمام صوبے",
     "degree": "ڈگری پروگرام",
     "allDegrees": "تمام پروگرامز",
+    "category": "تخصصی زمرہ",
+    "allCategories": "تمام زمرے",
+    "categoryGeneral": "عمومی",
+    "categoryMedical": "طب",
+    "categoryEngineering": "انجینئرنگ و ٹیکنالوجی",
+    "categoryAgriculture": "زراعت و ویٹرنری",
+    "categoryArts": "فنون و ڈیزائن",
+    "distanceEducation": "صرف فاصلاتی تعلیم",
     "type": "ادارے کی نوعیت",
     "allTypes": "سرکاری و پرائیویٹ",
     "public": "سرکاری (پبلک)",
@@ -44,7 +52,8 @@
     "pkr": "پاکستانی روپے",
     "apply": "فلٹر لاگو کریں",
     "reset": "ری سیٹ کریں",
-    "showing": "{count} یونیورسٹیاں دکھائی جا رہی ہیں"
+    "showing": "{count} یونیورسٹیاں دکھائی جا رہی ہیں",
+    "activeTagsLabel": "فعال فلٹرز"
   },
   "card": {
     "established": "قائم شدہ: {year}",
@@ -56,10 +65,24 @@
     "annualFee": "سالانہ فیس",
     "upTo": "حسب ضرورت تا {fee} روپے/سال",
     "viewDetails": "تفصیلات دیکھیں",
+    "viewDetailsMap": "تفصیل اور نقشہ",
     "saveShortlist": "محفوظ کریں",
     "inShortlist": "محفوظ شدہ",
     "addToCompare": "موازنہ کریں",
-    "compared": "موازنہ میں شامل"
+    "compared": "موازنہ میں شامل",
+    "distanceBadge": "فاصلاتی تعلیم"
+  },
+  "modal": {
+    "closeBtn": "تفصیلات بند کریں",
+    "contactSection": "سرکاری رابطہ اور کیمپس",
+    "scholarshipSection": "اسکالرشپ اور مالی امداد",
+    "programsSection": "دستیاب ڈگری پروگرامز",
+    "mapSection": "مقام اور نقشہ نویگیشن",
+    "openMaps": "گوگل میپس میں کھولیں",
+    "visitWebsite": "سرکاری یونیورسٹی ویب سائٹ",
+    "charteredBy": "منظور شدہ از",
+    "campuses": "کیمپس",
+    "distanceLearning": "فاصلاتی تعلیم دستیاب"
   },
   "fallback": {
     "title": "آپ کے {maxFee} روپے بجٹ میں کوئی پرائیویٹ فیس نہیں ملی",

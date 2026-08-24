@@ -1,4 +1,4 @@
-import { University, SearchFilters, PaginatedResult, ShortlistItem } from "@/types";
+import { University, SearchFilters, PaginatedResult } from "@/types";
 import { getLocalMasterUniversities } from "@/lib/xata";
 
 // Memory storage for user shortlist when running without remote DB
@@ -21,7 +21,8 @@ export async function fetchUniversities(filters: SearchFilters): Promise<Paginat
       u.name.toLowerCase().includes(q) || 
       (u.name_urdu && u.name_urdu.includes(q)) ||
       u.city.toLowerCase().includes(q) ||
-      u.province.toLowerCase().includes(q)
+      u.province.toLowerCase().includes(q) ||
+      (u.category && u.category.toLowerCase().includes(q))
     );
   }
 
@@ -37,6 +38,17 @@ export async function fetchUniversities(filters: SearchFilters): Promise<Paginat
     filtered = filtered.filter(u => u.province.toLowerCase() === p);
   }
 
+  // Category filter
+  if (filters.category && filters.category !== "all") {
+    const cat = filters.category.toLowerCase().trim();
+    filtered = filtered.filter(u => u.category && u.category.toLowerCase().includes(cat));
+  }
+
+  // Distance Education filter
+  if (filters.distanceEducation) {
+    filtered = filtered.filter(u => u.distance_education === true);
+  }
+
   // University Sector Type filter
   if (filters.type && filters.type !== "all") {
     filtered = filtered.filter(u => u.type.toLowerCase() === filters.type?.toLowerCase());
@@ -46,7 +58,7 @@ export async function fetchUniversities(filters: SearchFilters): Promise<Paginat
   if (filters.degree && filters.degree !== "all") {
     const d = filters.degree.toLowerCase().trim();
     filtered = filtered.filter(u => 
-      u.programs.some(p => p.toLowerCase().includes(d))
+      u.programs && u.programs.some(p => p.toLowerCase().includes(d))
     );
   }
 
@@ -61,7 +73,7 @@ export async function fetchUniversities(filters: SearchFilters): Promise<Paginat
     // If no university fits the student's max_fee, automatically display universities in that region that offer need-based scholarships
     if (feeFiltered.length === 0) {
       scholarshipOptions = filtered.filter(u => u.has_hec_scholarship || u.has_usaid_scholarship);
-      filtered = []; // primary filtered set is empty
+      filtered = [];
     } else {
       filtered = feeFiltered;
     }
@@ -89,7 +101,7 @@ export async function fetchScholarshipUniversities(city?: string, degree?: strin
   return all.filter(u => {
     const matchScholarship = u.has_hec_scholarship || u.has_usaid_scholarship;
     const matchCity = !city || city === "all" || u.city.toLowerCase() === city.toLowerCase();
-    const matchDegree = !degree || degree === "all" || u.programs.some(p => p.toLowerCase().includes(degree.toLowerCase()));
+    const matchDegree = !degree || degree === "all" || (u.programs && u.programs.some(p => p.toLowerCase().includes(degree.toLowerCase())));
     return matchScholarship && matchCity && matchDegree;
   });
 }
@@ -126,6 +138,12 @@ export async function getAllUniqueCities(): Promise<string[]> {
 export async function getAllUniquePrograms(): Promise<string[]> {
   const all = getLocalMasterUniversities();
   const programSet = new Set<string>();
-  all.forEach(u => u.programs.forEach(p => programSet.add(p)));
+  all.forEach(u => u.programs && u.programs.forEach(p => programSet.add(p)));
   return Array.from(programSet).sort();
+}
+
+export async function getAllUniqueCategories(): Promise<string[]> {
+  const all = getLocalMasterUniversities();
+  const categories = Array.from(new Set(all.map(u => u.category).filter(Boolean)));
+  return categories.sort();
 }

@@ -5,25 +5,26 @@ import { SearchFilters, University, PaginatedResult } from "@/types";
 import FilterBar from "@/components/FilterBar";
 import UniversityList from "@/components/UniversityList";
 import AIAdvisorModal from "@/components/AIAdvisorModal";
-import { Sparkles, Bot, Loader2 } from "lucide-react";
+import { Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface UniversitiesSearchClientProps {
   cities: string[];
   programs: string[];
+  categories?: string[];
   initialFilters: SearchFilters;
 }
 
 export default function UniversitiesSearchClient({
   cities,
   programs,
+  categories = [],
   initialFilters
 }: UniversitiesSearchClientProps) {
   const [filters, setFilters] = useState<SearchFilters>(initialFilters);
   const [data, setData] = useState<PaginatedResult<University> | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Client state for shortlists & compare list
   const [shortlistedIds, setShortlistedIds] = useState<string[]>([]);
   const [comparedUnis, setComparedUnis] = useState<University[]>([]);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
@@ -37,8 +38,10 @@ export default function UniversitiesSearchClient({
         if (filters.city) query.set("city", filters.city);
         if (filters.province) query.set("province", filters.province);
         if (filters.degree) query.set("degree", filters.degree);
+        if (filters.category) query.set("category", filters.category);
         if (filters.type) query.set("type", filters.type);
         if (filters.maxFee) query.set("maxFee", filters.maxFee.toString());
+        if (filters.distanceEducation) query.set("distanceEducation", "true");
         if (filters.page) query.set("page", filters.page.toString());
 
         const res = await fetch(`/api/universities?${query.toString()}`);
@@ -97,7 +100,7 @@ export default function UniversitiesSearchClient({
         <div>
           <h1 className="text-2xl sm:text-3xl font-black">Search & Filter Universities</h1>
           <p className="text-xs text-emerald-100/90 mt-1">
-            Filter by tuition budget, city, degree program, and discover HEC & USAID financial aid options.
+            Filter by tuition budget, city, degree program, category & distance education options.
           </p>
         </div>
         <Button
@@ -113,6 +116,7 @@ export default function UniversitiesSearchClient({
       <FilterBar
         cities={cities}
         programs={programs}
+        categories={categories}
         initialFilters={filters}
         onFilterChange={handleFilterChange}
       />

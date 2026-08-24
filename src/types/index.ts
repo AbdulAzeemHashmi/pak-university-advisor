@@ -5,9 +5,18 @@ export interface University {
   city: string;
   province: string;
   type: 'Public' | 'Private';
+  category: string;
+  campuses?: string;
+  chartered_by?: string;
   established_year?: number | null;
   website?: string;
   image_url?: string;
+  google_map_url?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  distance_education?: boolean;
+  phone?: string;
+  email?: string;
   ranking?: number | null;
   fee_range_max: number;
   has_hec_scholarship: boolean;
@@ -22,6 +31,8 @@ export interface SearchFilters {
   city?: string;
   province?: string;
   degree?: string;
+  category?: string;
+  distanceEducation?: boolean;
   maxFee?: number;
   type?: 'Public' | 'Private' | 'all';
   searchQuery?: string;

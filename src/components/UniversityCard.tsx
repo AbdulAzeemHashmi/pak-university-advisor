@@ -14,7 +14,9 @@ import {
   Heart, 
   CheckSquare, 
   Square,
-  Building2
+  Building2,
+  Info,
+  Wifi
 } from "lucide-react";
 
 interface UniversityCardProps {
@@ -23,6 +25,7 @@ interface UniversityCardProps {
   isCompared?: boolean;
   onToggleShortlist?: (id: string) => void;
   onToggleCompare?: (university: University) => void;
+  onViewDetails?: (university: University) => void;
 }
 
 export default function UniversityCard({
@@ -30,7 +33,8 @@ export default function UniversityCard({
   isShortlisted = false,
   isCompared = false,
   onToggleShortlist,
-  onToggleCompare
+  onToggleCompare,
+  onViewDetails
 }: UniversityCardProps) {
   const t = useTranslations("card");
   const [shortlisted, setShortlisted] = useState(isShortlisted);
@@ -56,11 +60,16 @@ export default function UniversityCard({
       <div className="h-32 bg-gradient-to-r from-[#01411C] to-[#1A8F3C] relative overflow-hidden flex items-end p-4">
         <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]" />
         
-        {/* Floating Sector Badge */}
-        <div className="absolute top-3 right-3 z-10">
+        {/* Floating Badges */}
+        <div className="absolute top-3 right-3 z-10 flex flex-col items-end gap-1">
           <Badge variant={university.type === "Public" ? "default" : "secondary"} className="shadow-md">
             {university.type === "Public" ? t("publicBadge") : t("privateBadge")}
           </Badge>
+          {university.distance_education && (
+            <Badge variant="secondary" className="bg-purple-900/60 text-purple-200 text-[10px] shadow-sm">
+              <Wifi className="w-2.5 h-2.5 mr-0.5" /> Distance Edu
+            </Badge>
+          )}
         </div>
 
         {/* Shortlist Heart Button */}
@@ -94,7 +103,7 @@ export default function UniversityCard({
       {/* Body Content */}
       <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
         <div>
-          {/* Metadata Row: Established & Ranking */}
+          {/* Metadata Row: Established & Category */}
           <div className="flex items-center justify-between text-xs text-slate-500 mb-3 pb-3 border-b border-slate-100">
             {university.established_year ? (
               <span className="flex items-center gap-1">
@@ -104,7 +113,7 @@ export default function UniversityCard({
             ) : (
               <span className="flex items-center gap-1">
                 <Building2 className="w-3.5 h-3.5 text-slate-400" />
-                HEC Charter
+                {university.category || "General"}
               </span>
             )}
 
@@ -113,7 +122,11 @@ export default function UniversityCard({
                 <Trophy className="w-3.5 h-3.5 text-amber-500" />
                 Rank #{university.ranking}
               </span>
-            ) : null}
+            ) : (
+              <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                {university.category || "General"}
+              </span>
+            )}
           </div>
 
           {/* Scholarship Badges */}
@@ -128,7 +141,7 @@ export default function UniversityCard({
           <div className="space-y-1">
             <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Top Offerings</span>
             <div className="flex flex-wrap gap-1">
-              {university.programs.slice(0, 4).map((prog, idx) => (
+              {university.programs && university.programs.slice(0, 4).map((prog, idx) => (
                 <span 
                   key={idx} 
                   className="text-[11px] bg-slate-100 text-slate-700 font-medium px-2 py-0.5 rounded-md"
@@ -136,7 +149,7 @@ export default function UniversityCard({
                   {prog}
                 </span>
               ))}
-              {university.programs.length > 4 && (
+              {university.programs && university.programs.length > 4 && (
                 <span className="text-[11px] bg-slate-100 text-slate-500 font-medium px-1.5 py-0.5 rounded-md">
                   +{university.programs.length - 4} more
                 </span>
@@ -155,28 +168,32 @@ export default function UniversityCard({
           </div>
 
           <div className="flex items-center gap-2 pt-1">
+            {/* View Details & Map button */}
+            <button
+              onClick={() => onViewDetails && onViewDetails(university)}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-[#01411C] hover:bg-[#1A8F3C] text-white text-xs font-semibold shadow-sm transition-all"
+            >
+              <Info className="w-3.5 h-3.5 text-amber-300" />
+              <span>Details & Map</span>
+            </button>
+
             {/* Compare toggle */}
             <button
               onClick={handleCompareClick}
               className={`
-                flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold
+                flex items-center justify-center gap-1 py-2 px-3 rounded-xl text-xs font-semibold
                 transition-all border
                 ${compared 
                   ? "bg-amber-50 border-amber-400 text-amber-900" 
                   : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
                 }
               `}
+              title={t("addToCompare")}
             >
               {compared ? (
-                <>
-                  <CheckSquare className="w-3.5 h-3.5 text-amber-600" />
-                  <span>{t("compared")}</span>
-                </>
+                <CheckSquare className="w-3.5 h-3.5 text-amber-600" />
               ) : (
-                <>
-                  <Square className="w-3.5 h-3.5 text-slate-400" />
-                  <span>{t("addToCompare")}</span>
-                </>
+                <Square className="w-3.5 h-3.5 text-slate-400" />
               )}
             </button>
 

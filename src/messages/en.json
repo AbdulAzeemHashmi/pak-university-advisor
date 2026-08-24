@@ -36,6 +36,14 @@
     "allProvinces": "All Provinces",
     "degree": "Degree Program",
     "allDegrees": "All Programs",
+    "category": "Specialization Category",
+    "allCategories": "All Categories",
+    "categoryGeneral": "General",
+    "categoryMedical": "Medical",
+    "categoryEngineering": "Engineering & Technology",
+    "categoryAgriculture": "Agriculture & Veterinary",
+    "categoryArts": "Arts & Design",
+    "distanceEducation": "Distance Education Only",
     "type": "Institution Type",
     "allTypes": "Public & Private",
     "public": "Public Sector",
@@ -44,7 +52,8 @@
     "pkr": "PKR",
     "apply": "Apply Filters",
     "reset": "Reset All",
-    "showing": "Showing {count} universities"
+    "showing": "Showing {count} universities",
+    "activeTagsLabel": "Active Filters"
   },
   "card": {
     "established": "Est. {year}",
@@ -56,10 +65,24 @@
     "annualFee": "Annual Fee",
     "upTo": "Up to PKR {fee}/yr",
     "viewDetails": "View Details",
+    "viewDetailsMap": "Details & Map",
     "saveShortlist": "Save to Shortlist",
     "inShortlist": "Saved",
     "addToCompare": "Compare",
-    "compared": "Comparing"
+    "compared": "Comparing",
+    "distanceBadge": "Distance Education"
+  },
+  "modal": {
+    "closeBtn": "Close Details",
+    "contactSection": "Official Contacts & Campuses",
+    "scholarshipSection": "Scholarships & Financial Aid",
+    "programsSection": "Available Degree Programs",
+    "mapSection": "Location & Map Navigation",
+    "openMaps": "Open in Google Maps",
+    "visitWebsite": "Visit Official University Website",
+    "charteredBy": "Chartered by",
+    "campuses": "Campuses",
+    "distanceLearning": "Distance Learning Available"
   },
   "fallback": {
     "title": "No Universities Fit Your Budget of PKR {maxFee}",

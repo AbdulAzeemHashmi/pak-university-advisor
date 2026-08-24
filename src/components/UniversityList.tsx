@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { University, PaginatedResult } from "@/types";
 import UniversityCard from "./UniversityCard";
 import ScholarshipBadge from "./ScholarshipBadge";
+import UniversityDetailModal from "./UniversityDetailModal";
 import { formatPKR } from "@/lib/utils";
 import { 
   Award, 
@@ -12,10 +13,10 @@ import {
   ChevronLeft, 
   ChevronRight, 
   Phone, 
-  Mail, 
   Sparkles,
   LayoutGrid,
-  List
+  List,
+  Info
 } from "lucide-react";
 
 interface UniversityListProps {
@@ -40,6 +41,7 @@ export default function UniversityList({
   const t = useTranslations("card");
   const fallbackT = useTranslations("fallback");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [selectedUni, setSelectedUni] = useState<University | null>(null);
 
   const { results, pagination, scholarshipOptions } = data;
 
@@ -83,16 +85,28 @@ export default function UniversityList({
                 <p className="leading-relaxed">{uni.scholarship_details || "Full tuition fee waiver, monthly stipend & books allowance for deserving students."}</p>
               </div>
 
-              <div className="text-xs text-slate-600 pt-2 border-t border-slate-100 space-y-1">
+              <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs text-slate-600">
                 <span className="font-bold text-slate-800 flex items-center gap-1">
                   <Phone className="w-3.5 h-3.5 text-[#01411C]" />
                   {fallbackT("financialAidContact")}:
                 </span>
-                <p className="pl-4 text-slate-500 font-mono text-[11px]">{uni.financial_aid_office || "Email: financialaid@university.edu.pk | Phone: +92-51-111-000-111"}</p>
+                <button
+                  onClick={() => setSelectedUni(uni)}
+                  className="inline-flex items-center gap-1 font-bold text-[#01411C] hover:text-[#1A8F3C]"
+                >
+                  <Info className="w-3.5 h-3.5" />
+                  <span>View Details & Map</span>
+                </button>
               </div>
             </div>
           ))}
         </div>
+
+        <UniversityDetailModal
+          university={selectedUni}
+          isOpen={!!selectedUni}
+          onClose={() => setSelectedUni(null)}
+        />
       </div>
     );
   }
@@ -113,7 +127,7 @@ export default function UniversityList({
   // Case 3: Display results
   return (
     <div className="space-y-6">
-      {/* Header controls: total count & grid/list toggle */}
+      {/* Header controls */}
       <div className="flex items-center justify-between text-xs font-semibold text-slate-500 px-1">
         <span>Showing {results.length} of {pagination.total} universities</span>
         <div className="flex items-center gap-1 bg-slate-200/70 p-1 rounded-xl">
@@ -147,6 +161,7 @@ export default function UniversityList({
             isCompared={comparedIds.includes(uni.id)}
             onToggleShortlist={onToggleShortlist}
             onToggleCompare={onToggleCompare}
+            onViewDetails={(u) => setSelectedUni(u)}
           />
         ))}
       </div>
@@ -175,6 +190,13 @@ export default function UniversityList({
           </button>
         </div>
       )}
+
+      {/* Detail Modal */}
+      <UniversityDetailModal
+        university={selectedUni}
+        isOpen={!!selectedUni}
+        onClose={() => setSelectedUni(null)}
+      />
     </div>
   );
 }
