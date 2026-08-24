@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { GraduationCap, Lock, CheckCircle2, Loader2, Info, KeyRound } from "lucide-react";
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSearchParams } from "next/navigation";
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const t = useTranslations("auth");
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -58,7 +58,7 @@ export default function ResetPasswordPage() {
         return;
       }
 
-      // 2. Submit new password to NextAuth credentials update endpoint
+      // 2. Submit new password to reset-password API endpoint
       const updateRes = await fetch("/api/auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -79,6 +79,131 @@ export default function ResetPasswordPage() {
     }
   };
 
+  if (success) {
+    return (
+      <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-6 text-center space-y-3">
+        <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
+        <h3 className="font-bold text-sm text-emerald-900">Password Reset Complete!</h3>
+        <p className="text-xs text-emerald-700">
+          Your password has been successfully updated. Redirecting to Sign In…
+        </p>
+        <Link href="/auth/login">
+          <Button className="mt-2 bg-[#01411C] hover:bg-[#1A8F3C] text-white text-xs font-bold px-6 py-2 rounded-xl">
+            Sign In Now
+          </Button>
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Dev-mode banner if code is pre-filled from fallback */}
+      {code && (
+        <div className="bg-amber-50 border border-amber-300 rounded-xl p-3 flex items-start gap-2">
+          <Info className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+          <p className="text-xs text-amber-800">
+            <strong>Dev Mode:</strong> Reset code pre-filled from the forgot password page. Enter your email and new password to complete.
+          </p>
+        </div>
+      )}
+
+      {/* Error display */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-xs text-red-800 font-medium">
+          {error}
+        </div>
+      )}
+
+      {/* Email */}
+      <div className="space-y-1.5">
+        <label className="text-xs font-bold text-slate-700">{t("emailLabel")}</label>
+        <div className="relative">
+          <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="student@example.pk"
+            className="pl-10 rounded-xl text-xs"
+          />
+        </div>
+      </div>
+
+      {/* OTP Code */}
+      <div className="space-y-1.5">
+        <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+          <KeyRound className="w-3.5 h-3.5 text-[#01411C]" />
+          6-Digit Reset Code
+        </label>
+        <Input
+          type="text"
+          required
+          value={code}
+          onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+          placeholder="123456"
+          maxLength={6}
+          className="rounded-xl text-sm font-mono tracking-widest text-center"
+        />
+      </div>
+
+      {/* New Password */}
+      <div className="space-y-1.5">
+        <label className="text-xs font-bold text-slate-700">{t("passwordLabel")}</label>
+        <div className="relative">
+          <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Input
+            type="password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
+            className="pl-10 rounded-xl text-xs"
+          />
+        </div>
+      </div>
+
+      {/* Confirm Password */}
+      <div className="space-y-1.5">
+        <label className="text-xs font-bold text-slate-700">{t("confirmPasswordLabel")}</label>
+        <div className="relative">
+          <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Input
+            type="password"
+            required
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="••••••••"
+            className="pl-10 rounded-xl text-xs"
+          />
+        </div>
+      </div>
+
+      <Button
+        type="submit"
+        disabled={loading}
+        className="w-full bg-[#01411C] hover:bg-[#1A8F3C] text-white py-3 rounded-2xl font-bold text-xs shadow-md flex items-center justify-center gap-2"
+      >
+        {loading ? (
+          <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
+        ) : (
+          <span>Update Password</span>
+        )}
+      </Button>
+
+      <div className="text-center pt-1">
+        <Link href="/auth/forgot-password" className="text-xs font-semibold text-slate-500 hover:text-[#01411C]">
+          Didn&apos;t receive a code? Request again
+        </Link>
+      </div>
+    </form>
+  );
+}
+
+export default function ResetPasswordPage() {
+  const t = useTranslations("auth");
+
   return (
     <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 animate-fade-in">
       <div className="max-w-md w-full bg-white rounded-3xl p-8 shadow-2xl border border-emerald-900/10 space-y-6">
@@ -90,123 +215,14 @@ export default function ResetPasswordPage() {
           <p className="text-xs text-slate-500">Enter the 6-digit code from your email and choose a new password</p>
         </div>
 
-        {success ? (
-          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-6 text-center space-y-3">
-            <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
-            <h3 className="font-bold text-sm text-emerald-900">Password Reset Complete!</h3>
-            <p className="text-xs text-emerald-700">
-              Your password has been successfully updated. Redirecting to Sign In…
-            </p>
-            <Link href="/auth/login">
-              <Button className="mt-2 bg-[#01411C] hover:bg-[#1A8F3C] text-white text-xs font-bold px-6 py-2 rounded-xl">
-                Sign In Now
-              </Button>
-            </Link>
+        {/* Suspense boundary required by Next.js for useSearchParams() */}
+        <Suspense fallback={
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-8 h-8 animate-spin text-[#01411C]" />
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-
-            {/* Dev-mode banner if code is pre-filled from fallback */}
-            {code && (
-              <div className="bg-amber-50 border border-amber-300 rounded-xl p-3 flex items-start gap-2">
-                <Info className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
-                <p className="text-xs text-amber-800">
-                  <strong>Dev Mode:</strong> Reset code pre-filled from the forgot password page. Enter your email and new password to complete.
-                </p>
-              </div>
-            )}
-
-            {/* Error display */}
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-xs text-red-800 font-medium">
-                {error}
-              </div>
-            )}
-
-            {/* Email */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700">{t("emailLabel")}</label>
-              <div className="relative">
-                <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                <Input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="student@example.pk"
-                  className="pl-10 rounded-xl text-xs"
-                />
-              </div>
-            </div>
-
-            {/* OTP Code */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                <KeyRound className="w-3.5 h-3.5 text-[#01411C]" />
-                6-Digit Reset Code
-              </label>
-              <Input
-                type="text"
-                required
-                value={code}
-                onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                placeholder="123456"
-                maxLength={6}
-                className="rounded-xl text-sm font-mono tracking-widest text-center"
-              />
-            </div>
-
-            {/* New Password */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700">{t("passwordLabel")}</label>
-              <div className="relative">
-                <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                <Input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="pl-10 rounded-xl text-xs"
-                />
-              </div>
-            </div>
-
-            {/* Confirm Password */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700">{t("confirmPasswordLabel")}</label>
-              <div className="relative">
-                <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                <Input
-                  type="password"
-                  required
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="pl-10 rounded-xl text-xs"
-                />
-              </div>
-            </div>
-
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-[#01411C] hover:bg-[#1A8F3C] text-white py-3 rounded-2xl font-bold text-xs shadow-md flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
-              ) : (
-                <span>Update Password</span>
-              )}
-            </Button>
-
-            <div className="text-center pt-1">
-              <Link href="/auth/forgot-password" className="text-xs font-semibold text-slate-500 hover:text-[#01411C]">
-                Didn&apos;t receive a code? Request again
-              </Link>
-            </div>
-          </form>
-        )}
+        }>
+          <ResetPasswordForm />
+        </Suspense>
       </div>
     </div>
   );
