@@ -12,9 +12,8 @@ export async function POST(req: NextRequest) {
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Generate a secure 6-digit OTP code
-    const otp = randomBytes(3).readUIntBE(0, 3).toString().padStart(6, "0").slice(0, 6);
-    await createResetToken(normalizedEmail, otp);
+    // Generate or fetch stateless reset token code
+    const otp = await createResetToken(normalizedEmail);
 
     // Attempt to send real email via Resend if configured
     const resendApiKey = process.env.RESEND_API_KEY;

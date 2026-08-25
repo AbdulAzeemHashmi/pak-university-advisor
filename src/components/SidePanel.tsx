@@ -134,7 +134,7 @@ export default function SidePanel() {
                 </div>
               </div>
               <button
-                onClick={() => signOut()}
+                onClick={() => signOut({ callbackUrl: "/auth/login" })}
                 className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-red-200 hover:bg-red-950/40 hover:text-red-100 transition-colors"
               >
                 <LogOut className="w-4 h-4" />
