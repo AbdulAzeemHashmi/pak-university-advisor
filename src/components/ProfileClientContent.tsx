@@ -1,6 +1,7 @@
 "use client";
 
 import { useSession, signOut } from "next-auth/react";
+import { useLocale } from "next-intl";
 import { useTranslations } from "next-intl";
 import AuthGuard from "@/components/AuthGuard";
 import { User, Mail, Shield, LogOut, CheckCircle } from "lucide-react";
@@ -9,6 +10,12 @@ import { Button } from "@/components/ui/button";
 export default function ProfileClientContent() {
   const { data: session } = useSession();
   const t = useTranslations("profile");
+  const locale = useLocale();
+
+  async function handleSignOut() {
+    await signOut({ redirect: false });
+    window.location.href = `/${locale}/auth/login`;
+  }
 
   return (
     <AuthGuard>
@@ -55,7 +62,7 @@ export default function ProfileClientContent() {
 
           <div className="pt-4 border-t border-slate-100">
             <Button
-              onClick={() => signOut({ callbackUrl: `${window.location.origin}/en/auth/login` })}
+              onClick={handleSignOut}
               variant="destructive"
               className="w-full py-3 rounded-2xl font-bold text-xs shadow-md flex items-center justify-center gap-2"
             >
