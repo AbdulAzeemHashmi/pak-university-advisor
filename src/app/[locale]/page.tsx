@@ -1,5 +1,7 @@
 import { setRequestLocale } from 'next-intl/server';
 import { getTranslations } from 'next-intl/server';
+import { redirect } from 'next/navigation';
+import { auth } from '@/lib/auth';
 import { fetchUniversities, fetchScholarshipUniversities } from '@/lib/db';
 import HomeClientContent from '@/components/HomeClientContent';
 
@@ -10,6 +12,11 @@ export default async function HomePage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+
+  const session = await auth();
+  if (!session?.user) {
+    redirect(`/${locale}/auth/login`);
+  }
 
   const t = await getTranslations('hero');
   

@@ -5,6 +5,10 @@ const requestCounts = new Map<string, { count: number; resetAt: number }>();
 
 function cleanTextForHumanFormat(text: string): string {
   return text
+    // Remove standalone horizontal rule lines like --- or *** or ___
+    .replace(/^[\s\-\*_]{3,}$/gm, "")
+    // Remove any remaining triple hyphens ---
+    .replace(/---/g, "")
     // Replace en dash (– / \u2013) and em dash (— / \u2014) with space hyphen space
     .replace(/[\u2013\u2014]/g, " - ")
     // Remove markdown headers #, ##, ###, ####
@@ -13,6 +17,8 @@ function cleanTextForHumanFormat(text: string): string {
     .replace(/\*{1,2}/g, "")
     // Clean up duplicate hyphens or weird trailing dash spacing
     .replace(/\s+-\s+-+/g, " - ")
+    // Clean up excessive blank lines (more than 2 newlines in a row)
+    .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
 
@@ -141,7 +147,7 @@ ${(searchData.scholarshipOptions || []).slice(0, 3).map(u => `• ${u.name} (${u
 ۲. ۱۰۰٪ ٹیوشن فیس کے ساتھ ماہانہ وظیفہ بھی فراہم کیا جائے گا۔
 ۳. این ٹی ایس (NTS) اور یونیورسٹی کے اینٹری ٹیسٹ کی تیاری شروع کریں۔`;
 
-    const combinedRecommendation = `${englishText}\n\n---\n\n${urduText}`;
+    const combinedRecommendation = `${englishText}\n\n${urduText}`;
 
     return NextResponse.json({ recommendation: cleanTextForHumanFormat(combinedRecommendation) });
   } catch (error) {
