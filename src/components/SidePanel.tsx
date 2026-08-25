@@ -26,6 +26,10 @@ export default function SidePanel() {
   const [isOpen, setIsOpen] = useState(false);
   const { data: session } = useSession();
 
+  if (pathname.startsWith("/auth")) {
+    return null;
+  }
+
   const navItems = [
     { href: "/", label: t("home"), icon: Home },
     { href: "/universities", label: t("universities"), icon: GraduationCap },
