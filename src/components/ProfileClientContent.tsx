@@ -55,7 +55,7 @@ export default function ProfileClientContent() {
 
           <div className="pt-4 border-t border-slate-100">
             <Button
-              onClick={() => signOut({ callbackUrl: "/auth/login" })}
+              onClick={() => signOut({ callbackUrl: `${window.location.origin}/en/auth/login` })}
               variant="destructive"
               className="w-full py-3 rounded-2xl font-bold text-xs shadow-md flex items-center justify-center gap-2"
             >

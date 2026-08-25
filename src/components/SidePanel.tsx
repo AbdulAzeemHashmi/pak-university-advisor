@@ -82,7 +82,7 @@ export default function SidePanel() {
                 <h1 className="font-extrabold text-base tracking-tight leading-none text-white">
                   Pak University
                 </h1>
-                <span className="text-xs text-amber-400 font-medium">Advisor • مشیر</span>
+                <span className="text-xs text-amber-400 font-medium">{locale === "ur" ? "مشیر" : "Advisor"}</span>
               </div>
             </Link>
           </div>
@@ -134,7 +134,7 @@ export default function SidePanel() {
                 </div>
               </div>
               <button
-                onClick={() => signOut({ callbackUrl: "/auth/login" })}
+                onClick={() => signOut({ callbackUrl: `${window.location.origin}/en/auth/login` })}
                 className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-red-200 hover:bg-red-950/40 hover:text-red-100 transition-colors"
               >
                 <LogOut className="w-4 h-4" />
