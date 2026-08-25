@@ -17,7 +17,10 @@ export async function POST(req: NextRequest) {
 
     // Attempt to send real email via Resend if configured
     const resendApiKey = process.env.RESEND_API_KEY;
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    // Derive the app URL from the request so it works on Vercel and localhost alike
+    const host = req.headers.get("x-forwarded-host") || req.headers.get("host") || "localhost:3000";
+    const proto = req.headers.get("x-forwarded-proto") || "http";
+    const appUrl = `${proto}://${host}`;
 
     if (resendApiKey && resendApiKey !== "re_placeholder") {
       try {
