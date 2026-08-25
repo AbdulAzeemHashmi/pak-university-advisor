@@ -52,17 +52,20 @@ export async function POST(req: NextRequest) {
         });
 
         if (resendRes.ok) {
-          // Successfully sent via Resend — don't expose devCode
-          return NextResponse.json({ success: true });
+          // Successfully sent via Resend
+          return NextResponse.json({ success: true, emailSent: true });
+        } else {
+          const resendErr = await resendRes.text();
+          console.warn("Resend email response not OK:", resendErr);
         }
       } catch (emailErr) {
         console.error("Resend email failed:", emailErr);
       }
     }
 
-    // The local fallback keeps the project usable without a paid email provider.
-    console.log(`[DEV] Password reset OTP for ${normalizedEmail}: ${otp}`);
-    return NextResponse.json({ success: true, ...(process.env.NODE_ENV !== "production" ? { devCode: otp } : {}) });
+    // Fallback: Return devCode OTP code so user can reset password on-screen when no email domain is configured
+    console.log(`[OTP RESET CODE] Password reset OTP for ${normalizedEmail}: ${otp}`);
+    return NextResponse.json({ success: true, emailSent: false, devCode: otp });
   } catch (err) {
     console.error("Forgot password error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

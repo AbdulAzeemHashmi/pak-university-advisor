@@ -1,5 +1,6 @@
 import { promises as fs } from "fs";
 import path from "path";
+import os from "os";
 import { randomUUID } from "crypto";
 import bcrypt from "bcryptjs";
 
@@ -23,19 +24,47 @@ type LocalStore = {
   resetTokens: ResetToken[];
 };
 
-const storePath = path.join(process.cwd(), "data", "runtime", "store.json");
+declare global {
+  // Global cache to maintain in-memory state across serverless requests
+  var __PAKS_STORE: LocalStore | undefined;
+}
+
+// Target /tmp directory for writable filesystem access on Vercel / serverless
+const tmpStorePath = path.join(os.tmpdir(), "pak_uni_advisor_store.json");
+const fallbackStorePath = path.join(process.cwd(), "data", "runtime", "store.json");
 
 async function readStore(): Promise<LocalStore> {
-  try {
-    return JSON.parse(await fs.readFile(storePath, "utf8")) as LocalStore;
-  } catch {
-    return { users: [], shortlists: {}, resetTokens: [] };
+  if (globalThis.__PAKS_STORE) {
+    return globalThis.__PAKS_STORE;
   }
+
+  let store: LocalStore = { users: [], shortlists: {}, resetTokens: [] };
+
+  try {
+    const data = await fs.readFile(tmpStorePath, "utf8");
+    store = JSON.parse(data) as LocalStore;
+  } catch {
+    try {
+      const data = await fs.readFile(fallbackStorePath, "utf8");
+      store = JSON.parse(data) as LocalStore;
+    } catch {
+      store = { users: [], shortlists: {}, resetTokens: [] };
+    }
+  }
+
+  globalThis.__PAKS_STORE = store;
+  return store;
 }
 
 async function writeStore(store: LocalStore) {
-  await fs.mkdir(path.dirname(storePath), { recursive: true });
-  await fs.writeFile(storePath, JSON.stringify(store, null, 2), "utf8");
+  globalThis.__PAKS_STORE = store;
+
+  try {
+    await fs.mkdir(path.dirname(tmpStorePath), { recursive: true });
+    await fs.writeFile(tmpStorePath, JSON.stringify(store, null, 2), "utf8");
+  } catch (err) {
+    console.warn("Could not persist store to disk, keeping in memory:", err);
+  }
 }
 
 export async function registerUser(name: string, email: string, password: string) {

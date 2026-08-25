@@ -68,22 +68,17 @@ export default function ForgotPasswordPage() {
               <p className="text-xs text-emerald-700 leading-relaxed">
                 If an account with <span className="font-mono font-bold">{email}</span> exists, a reset link has been sent.
               </p>
-              <Link href="/auth/login">
-                <Button className="mt-2 bg-[#01411C] hover:bg-[#1A8F3C] text-white text-xs font-bold px-6 py-2 rounded-xl">
-                  Back to Sign In
-                </Button>
-              </Link>
             </div>
 
-            {/* Dev-mode OTP Code — only shown when RESEND_API_KEY is not configured */}
+            {/* OTP Code Fallback Banner — shown when email transport is not active */}
             {devCode && (
               <div className="bg-amber-50 border border-amber-300 rounded-2xl p-5 space-y-3">
                 <div className="flex items-center gap-2 text-amber-800">
                   <Info className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                  <span className="text-xs font-bold">Dev Mode — Email not sent (no Resend domain configured)</span>
+                  <span className="text-xs font-bold">Verification Reset Code</span>
                 </div>
                 <p className="text-xs text-amber-700 leading-relaxed">
-                  A paid Resend domain is required for real email delivery. During local development, your one-time reset code is displayed below — copy it and use it in the reset password page.
+                  Your 6-digit password reset code is displayed below. Use it on the reset page to set a new password.
                 </p>
                 <div className="flex items-center gap-2">
                   <code className="flex-1 text-sm font-mono font-black bg-white text-amber-900 border border-amber-300 px-4 py-2 rounded-xl tracking-widest text-center">
@@ -97,7 +92,7 @@ export default function ForgotPasswordPage() {
                     {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
                   </button>
                 </div>
-                <Link href="/auth/reset-password">
+                <Link href={`/auth/reset-password?email=${encodeURIComponent(email)}&code=${devCode}`}>
                   <Button className="w-full bg-amber-500 hover:bg-amber-400 text-white text-xs font-bold px-4 py-2 rounded-xl mt-1">
                     Go to Reset Password Page →
                   </Button>
