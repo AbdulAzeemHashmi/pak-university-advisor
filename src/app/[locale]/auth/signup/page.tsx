@@ -50,7 +50,7 @@ export default function SignupPage() {
       if (result?.error) {
         setError("Account created, but sign in failed. Please sign in manually.");
       } else {
-        router.push("/shortlist");
+        router.push("/");
       }
     } catch (err) {
       setError("An unexpected error occurred.");

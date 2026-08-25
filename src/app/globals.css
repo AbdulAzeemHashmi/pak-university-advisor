@@ -110,3 +110,13 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #1A8F3C;
 }
+
+/* Hide Next.js dev overlay indicator logo badge */
+[data-nextjs-toast],
+[data-nextjs-toast-wrapper],
+[data-nextjs-dialog-overlay],
+#next-logo,
+button[aria-label="Next.js Dev Overlay"],
+nextjs-portal {
+  display: none !important;
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { 
   Home, 
@@ -21,6 +21,7 @@ import { useSession, signOut } from "next-auth/react";
 
 export default function SidePanel() {
   const t = useTranslations("nav");
+  const locale = useLocale();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const { data: session } = useSession();
@@ -111,7 +112,9 @@ export default function SidePanel() {
         {/* Footer controls & User status */}
         <div className="p-4 border-t border-emerald-800/60 space-y-3 bg-emerald-950/40">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-emerald-200 font-medium">Language / زبان</span>
+            <span className="text-xs text-emerald-200 font-medium">
+              {locale === "ur" ? "زبان" : "Language"}
+            </span>
             <LanguageSwitcher />
           </div>
 

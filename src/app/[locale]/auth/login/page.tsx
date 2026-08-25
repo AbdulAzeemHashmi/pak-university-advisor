@@ -32,7 +32,7 @@ export default function LoginPage() {
       if (result?.error) {
         setError("Invalid email or password credentials.");
       } else {
-        router.push("/shortlist");
+        router.push("/");
       }
     } catch (err) {
       setError("An unexpected error occurred.");

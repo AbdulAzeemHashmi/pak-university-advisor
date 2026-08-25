@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import SidePanel from '@/components/SidePanel';
 import SessionProviderWrapper from '@/components/SessionProviderWrapper';
+import AuthGuard from '@/components/AuthGuard';
 import '../globals.css';
 
 export function generateStaticParams() {
@@ -35,7 +36,7 @@ export default async function LocaleLayout({
             <div className="flex flex-col lg:flex-row min-h-screen">
               <SidePanel />
               <main className="flex-1 p-4 sm:p-6 lg:p-10 max-w-7xl mx-auto w-full">
-                {children}
+                <AuthGuard>{children}</AuthGuard>
               </main>
             </div>
           </NextIntlClientProvider>

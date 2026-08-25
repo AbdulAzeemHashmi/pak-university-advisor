@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
+  devIndicators: false,
   images: {
     remotePatterns: [
       {

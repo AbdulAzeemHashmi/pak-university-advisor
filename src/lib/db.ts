@@ -2,6 +2,81 @@ import { University, SearchFilters, PaginatedResult } from "@/types";
 import { getLocalMasterUniversities } from "@/lib/xata";
 import { getStoredShortlist, updateStoredShortlist } from "@/lib/local-store";
 
+interface AliasGroup {
+  aliases: string[];
+  targetKeywords: string[];
+}
+
+const ALIAS_GROUPS: AliasGroup[] = [
+  {
+    aliases: [
+      "fast",
+      "fast-nuces",
+      "fast nuces",
+      "nuces",
+      "national university of computer and emerging sciences",
+      "national university of computer & emerging sciences"
+    ],
+    targetKeywords: ["national university of computer", "fast", "nuces"]
+  },
+  {
+    aliases: ["nust", "national university of sciences and technology", "national university of sciences & technology"],
+    targetKeywords: ["national university of sciences", "nust"]
+  },
+  {
+    aliases: ["lums", "lahore university of management sciences"],
+    targetKeywords: ["lahore university of management sciences", "lums"]
+  },
+  {
+    aliases: ["uet", "university of engineering and technology", "university of engineering & technology"],
+    targetKeywords: ["university of engineering", "uet"]
+  },
+  {
+    aliases: ["comsats", "cui"],
+    targetKeywords: ["comsats"]
+  },
+  {
+    aliases: ["giki", "ghulam ishaq khan institute"],
+    targetKeywords: ["ghulam ishaq khan", "giki"]
+  },
+  {
+    aliases: ["pieas", "pakistan institute of engineering and applied sciences"],
+    targetKeywords: ["pakistan institute of engineering", "pieas"]
+  },
+  {
+    aliases: ["iba", "institute of business administration"],
+    targetKeywords: ["institute of business administration", "iba"]
+  },
+  {
+    aliases: ["gcu", "government college university"],
+    targetKeywords: ["government college university", "gcu"]
+  },
+  {
+    aliases: ["itu", "information technology university"],
+    targetKeywords: ["information technology university", "itu"]
+  },
+  {
+    aliases: ["lcwu", "lahore college for women university"],
+    targetKeywords: ["lahore college for women", "lcwu"]
+  },
+  {
+    aliases: ["pu", "punjab university", "university of the punjab"],
+    targetKeywords: ["university of the punjab", "punjab university"]
+  },
+  {
+    aliases: ["nums", "national university of medical sciences"],
+    targetKeywords: ["national university of medical sciences", "nums"]
+  },
+  {
+    aliases: ["numl", "national university of modern languages"],
+    targetKeywords: ["national university of modern languages", "numl"]
+  },
+  {
+    aliases: ["nutech", "national university of technology"],
+    targetKeywords: ["national university of technology", "nutech"]
+  }
+];
+
 export async function fetchUniversities(filters: SearchFilters): Promise<PaginatedResult<University>> {
   const allUniversities = getLocalMasterUniversities();
   
@@ -10,16 +85,35 @@ export async function fetchUniversities(filters: SearchFilters): Promise<Paginat
 
   let filtered = allUniversities;
 
-  // Search Query filter
+  // Search Query filter with intelligent alias & synonym resolution
   if (filters.searchQuery) {
-    const q = filters.searchQuery.toLowerCase().trim();
-    filtered = filtered.filter(u => 
-      u.name.toLowerCase().includes(q) || 
-      (u.name_urdu && u.name_urdu.includes(q)) ||
-      u.city.toLowerCase().includes(q) ||
-      u.province.toLowerCase().includes(q) ||
-      (u.category && u.category.toLowerCase().includes(q))
+    const rawQ = filters.searchQuery.toLowerCase().trim();
+    const normalizedQ = rawQ.replace(/[\-&]/g, " ").replace(/\s+/g, " ").trim();
+
+    // Check if query matches any known university alias group
+    const matchedGroups = ALIAS_GROUPS.filter(group => 
+      group.aliases.some(alias => {
+        const normAlias = alias.toLowerCase().replace(/[\-&]/g, " ").replace(/\s+/g, " ").trim();
+        return normAlias === normalizedQ || alias.toLowerCase() === rawQ;
+      })
     );
+
+    const groupKeywords = matchedGroups.flatMap(g => g.targetKeywords);
+
+    filtered = filtered.filter(u => {
+      const uNameLower = u.name.toLowerCase();
+      const matchDirect = 
+        uNameLower.includes(rawQ) || 
+        uNameLower.includes(normalizedQ) ||
+        (u.name_urdu && u.name_urdu.includes(rawQ)) ||
+        u.city.toLowerCase().includes(rawQ) ||
+        u.province.toLowerCase().includes(rawQ) ||
+        (u.category && u.category.toLowerCase().includes(rawQ));
+
+      const matchAlias = groupKeywords.length > 0 && groupKeywords.some(kw => uNameLower.includes(kw));
+
+      return matchDirect || matchAlias;
+    });
   }
 
   // City filter
