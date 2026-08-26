@@ -3,8 +3,9 @@ import path from "path";
 import os from "os";
 import { randomUUID, createHmac } from "crypto";
 import bcrypt from "bcryptjs";
+import { getXataClient } from "@/lib/xata";
 
-type LocalUser = {
+export type LocalUser = {
   id: string;
   name: string;
   email: string;
@@ -12,20 +13,20 @@ type LocalUser = {
   createdAt: string;
 };
 
-type ResetToken = {
+export type ResetToken = {
   email: string;
   codeHash: string;
   expiresAt: number;
 };
 
-type LocalStore = {
+export type LocalStore = {
   users: LocalUser[];
   shortlists: Record<string, string[]>;
   resetTokens: ResetToken[];
 };
 
 declare global {
-  // Global cache to maintain in-memory state across serverless requests
+  // Global cache to maintain in-memory state across serverless requests in same process
   var __PAKS_STORE: LocalStore | undefined;
 }
 
@@ -90,8 +91,26 @@ export async function registerUser(name: string, email: string, password: string
     passwordHash: await bcrypt.hash(password, 12),
     createdAt: new Date().toISOString()
   };
+  
   store.users.push(user);
   await writeStore(store);
+
+  // Optional background sync with Xata database if active
+  if (process.env.XATA_API_KEY && process.env.XATA_DATABASE_URL) {
+    try {
+      const xata = getXataClient();
+      // Sync record to Xata if users table exists
+      await xata.db.users?.create?.({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        createdAt: new Date(user.createdAt)
+      }).catch(() => null);
+    } catch (e) {
+      console.warn("Xata sync notice:", e);
+    }
+  }
+
   return { user: { id: user.id, name: user.name, email: user.email } };
 }
 
@@ -161,7 +180,7 @@ export async function resetPassword(email: string, code: string, password: strin
   if (user) {
     user.passwordHash = newHash;
   } else {
-    // If user registered on a different serverless lambda instance, create/update entry now
+    // Create/update user entry if registered on another serverless instance
     user = {
       id: randomUUID(),
       name: normalizedEmail.split("@")[0],
