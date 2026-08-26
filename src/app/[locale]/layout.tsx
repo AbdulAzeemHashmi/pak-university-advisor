@@ -5,6 +5,7 @@ import { routing } from '@/i18n/routing';
 import SidePanel from '@/components/SidePanel';
 import SessionProviderWrapper from '@/components/SessionProviderWrapper';
 import AuthGuard from '@/components/AuthGuard';
+import RAGChatWidget from '@/components/RAGChatWidget';
 import '../globals.css';
 
 export function generateStaticParams() {
@@ -39,6 +40,7 @@ export default async function LocaleLayout({
                 <AuthGuard>{children}</AuthGuard>
               </main>
             </div>
+            <RAGChatWidget />
           </NextIntlClientProvider>
         </SessionProviderWrapper>
       </body>
