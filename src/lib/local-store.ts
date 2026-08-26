@@ -100,7 +100,8 @@ export async function registerUser(name: string, email: string, password: string
     try {
       const xata = getXataClient();
       // Sync record to Xata if users table exists
-      await xata.db.users?.create?.({
+      const dbAny = xata.db as unknown as Record<string, { create?: (data: Record<string, unknown>) => Promise<unknown> }>;
+      await dbAny.users?.create?.({
         id: user.id,
         name: user.name,
         email: user.email,
