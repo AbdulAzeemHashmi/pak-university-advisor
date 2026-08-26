@@ -386,6 +386,7 @@ export default function AIAdvisorModal({
       {selectedUniForDetail && (
         <UniversityDetailModal
           university={selectedUniForDetail}
+          isOpen={!!selectedUniForDetail}
           onClose={() => setSelectedUniForDetail(null)}
         />
       )}
