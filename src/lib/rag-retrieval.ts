@@ -25,10 +25,10 @@ function tokenizeQuery(text: string): string[] {
     .replace(/[^\w\s\u0600-\u06FF]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
-  
+
   const words = cleaned.split(' ').filter(w => w.length > 1);
   const grams: string[] = [];
-  
+
   for (let i = 0; i < words.length; i++) {
     grams.push(words[i]);
     if (i < words.length - 1) {
@@ -38,21 +38,55 @@ function tokenizeQuery(text: string): string[] {
   return grams;
 }
 
+// Each alias entry maps an acronym to an ordered array of name substrings to search for,
+// from most specific to least specific. The first entry is the canonical identifier.
 const ALIAS_MAP: Record<string, string[]> = {
-  fast: ["fast", "nuces", "national university of computer"],
-  nust: ["nust", "national university of sciences"],
-  lums: ["lums", "lahore university of management"],
-  uet: ["uet", "university of engineering and technology"],
-  comsats: ["comsats", "cui"],
-  giki: ["giki", "ghulam ishaq khan"],
-  pieas: ["pieas", "pakistan institute of engineering"],
-  iba: ["iba", "institute of business administration"],
-  gcu: ["gcu", "government college university"],
-  pu: ["punjab university", "university of the punjab"],
+  fast: ["national university of computer", "nuces"],
+  nuces: ["national university of computer", "nuces"],
+  nust: ["national university of sciences & technology", "national university of sciences and technology"],
+  lums: ["lahore university of management"],
+  // UET aliases must be disambiguated by city context:
+  uet: ["university of engineering & technology", "university of engineering and technology"],
+  "uet lahore": ["university of engineering & technology (2)"],
+  "uet taxila": ["university of engineering & technology, taxila"],
+  "uet peshawar": ["university of engineering & technology"],
+  comsats: ["comsats university"],
+  cui: ["comsats university"],
+  giki: ["ghulam ishaq khan"],
+  pieas: ["pakistan institute of engineering & applied sciences", "pakistan institute of engineering and applied sciences"],
+  iba: ["institute of business administration"],
+  gcu: ["government college university"],
+  pu: ["university of the punjab"],
   itu: ["information technology university"],
   nums: ["national university of medical sciences"],
-  numl: ["national university of modern languages"]
+  numl: ["national university of modern languages"],
+  "air university": ["air university"],
+  "bahria university": ["bahria university"],
+  pide: ["pakistan institute of development economics"],
+  "quaid-i-azam": ["quaid-i-azam university"],
+  qau: ["quaid-i-azam university"],
+  aku: ["aga khan university"],
+  pu_lahore: ["university of the punjab"],
+  ned: ["ned university of engineering"],
+  ist: ["institute of space technology"],
 };
+
+// Preferred institution ordering for common queries (by canonical id in dataset)
+// These are used to sort results when all else is equal
+const PRESTIGE_IDS: string[] = [
+  "uni_138", // NUST
+  "uni_134", // FAST/NUCES Islamabad
+  "uni_111", // LUMS
+  "uni_32",  // COMSATS Islamabad
+  "uni_5",   // Air University
+  "uni_150", // PIEAS
+  "uni_163", // QAU
+  "uni_226", // UET Taxila
+  "uni_224", // UET Lahore (2)
+  "uni_223", // UET Peshawar
+  "uni_18",  // Bahria University
+  "uni_84",  // IIU
+];
 
 export type QueryIntentType = "GREETING" | "SCHOLARSHIP" | "COMPARISON" | "SEARCH" | "OUT_OF_DOMAIN";
 
@@ -62,6 +96,30 @@ export interface QueryIntent {
   detectedDegree?: string;
   detectedUniversities?: string[];
   isLowFee?: boolean;
+}
+
+/**
+ * Extract all university alias keys mentioned in a query string.
+ * Handles compound aliases like "uet taxila" before simple "uet".
+ */
+function extractMentionedAliases(q: string): string[] {
+  const mentioned: string[] = [];
+  // Check compound aliases first (longer matches take priority)
+  const sortedKeys = Object.keys(ALIAS_MAP).sort((a, b) => b.length - a.length);
+  const matched = new Set<string>();
+
+  for (const key of sortedKeys) {
+    const escaped = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    if (new RegExp(`\\b${escaped}\\b`, "i").test(q)) {
+      // Avoid double-counting sub-aliases (e.g. "uet taxila" should not also add "uet")
+      const isSubsumedByLonger = mentioned.some(m => m.includes(key) && m.length > key.length);
+      if (!isSubsumedByLonger && !matched.has(key)) {
+        mentioned.push(key);
+        matched.add(key);
+      }
+    }
+  }
+  return mentioned;
 }
 
 export function detectQueryIntent(text: string): QueryIntent {
@@ -94,37 +152,69 @@ export function detectQueryIntent(text: string): QueryIntent {
 
   // Detect major disciplines
   const disciplines = [
-    "computer science", "cs", "software engineering", "se", "artificial intelligence", "ai",
-    "data science", "ds", "cyber security", "electrical engineering", "mechanical engineering",
-    "civil engineering", "mbbs", "bds", "pharm-d", "nursing", "business administration", "bba",
+    "computer science", "software engineering", "artificial intelligence",
+    "data science", "cyber security", "electrical engineering", "mechanical engineering",
+    "civil engineering", "mbbs", "bds", "pharm-d", "nursing", "business administration",
     "accounting", "finance", "economics", "law", "llb", "psychology", "fine arts", "architecture"
   ];
-  const detectedDegree = disciplines.find(d => {
-    if (d.length <= 2) {
-      return new RegExp(`\\b${d}\\b`, "i").test(q);
+  // Also check short abbreviations with strict word boundary
+  const disciplineAbbreviations: Record<string, string> = {
+    "\\bcs\\b": "computer science",
+    "\\bse\\b": "software engineering",
+    "\\bai\\b": "artificial intelligence",
+    "\\bds\\b": "data science",
+    "\\bbba\\b": "business administration",
+  };
+  let detectedDegree = disciplines.find(d => q.includes(d));
+  if (!detectedDegree) {
+    for (const [pattern, degree] of Object.entries(disciplineAbbreviations)) {
+      if (new RegExp(pattern, "i").test(q)) {
+        detectedDegree = degree;
+        break;
+      }
     }
-    return q.includes(d);
-  });
+  }
 
-  // Detect specific university acronyms
-  const detectedUnis: string[] = [];
-  Object.keys(ALIAS_MAP).forEach(aliasKey => {
-    if (new RegExp(`\\b${aliasKey}\\b`, "i").test(q)) {
-      detectedUnis.push(aliasKey);
-    }
-  });
+  // Detect specific university acronyms/names from the query
+  const detectedUniversities = extractMentionedAliases(q);
 
   const isLowFee = q.includes("cheap") || q.includes("low fee") || q.includes("affordable") || q.includes("کم فیس") || q.includes("low cost") || q.includes("under");
 
   if (isComparison) {
-    return { type: "COMPARISON", detectedCity, detectedDegree, detectedUniversities: detectedUnis, isLowFee };
+    return { type: "COMPARISON", detectedCity, detectedDegree, detectedUniversities, isLowFee };
   }
 
   if (isScholarship) {
-    return { type: "SCHOLARSHIP", detectedCity, detectedDegree, detectedUniversities: detectedUnis, isLowFee };
+    return { type: "SCHOLARSHIP", detectedCity, detectedDegree, detectedUniversities, isLowFee };
   }
 
-  return { type: "SEARCH", detectedCity, detectedDegree, detectedUniversities: detectedUnis, isLowFee };
+  return { type: "SEARCH", detectedCity, detectedDegree, detectedUniversities, isLowFee };
+}
+
+/**
+ * Given a list of alias keys extracted from the query and all universities,
+ * return pinned University objects that must always appear in results.
+ * For "uet" without city disambiguation, return ALL UET variants (Lahore, Taxila, Peshawar).
+ */
+function resolvePinnedUniversities(aliases: string[], allUniversities: University[]): University[] {
+  const pinned: University[] = [];
+  const pinnedIds = new Set<string>();
+
+  for (const alias of aliases) {
+    const searchStrings = ALIAS_MAP[alias] || [];
+    for (const searchStr of searchStrings) {
+      const matches = allUniversities.filter(u =>
+        u.name.toLowerCase().includes(searchStr.toLowerCase()) && !pinnedIds.has(u.id)
+      );
+      for (const m of matches) {
+        pinned.push(m);
+        pinnedIds.add(m.id);
+      }
+      if (matches.length > 0) break; // Take first matching search string per alias
+    }
+  }
+
+  return pinned;
 }
 
 export interface RAGRetrievalResult {
@@ -146,17 +236,38 @@ export async function searchUniversitiesRAG(
   const queryLower = (query || "").toLowerCase();
   const intent = detectQueryIntent(query);
 
-  // If the query is a simple greeting, do not force random universities into context
+  // Greeting: return a welcome response without database dumping
   if (intent.type === "GREETING") {
-    const featuredInstitutions = allUniversities.filter(u =>
-      ["uni_1", "uni_2", "uni_3", "uni_6", "uni_12"].includes(u.id) ||
-      (u.ranking && u.ranking <= 5)
-    ).slice(0, 4);
-
     return {
-      results: featuredInstitutions,
+      results: [],
       contextSummary: "Student has initiated a greeting. Provide a warm, encouraging welcome in English and Urdu, explain what guidance you can provide (fees, admissions, scholarships, comparisons), and suggest 3 sample questions.",
       citedIds: [],
+      intent
+    };
+  }
+
+  // COMPARISON: Guarantee the explicitly named universities always appear
+  if (intent.type === "COMPARISON" && intent.detectedUniversities && intent.detectedUniversities.length > 0) {
+    const pinned = resolvePinnedUniversities(intent.detectedUniversities, allUniversities);
+
+    // Sort pinned by prestige/quality (PRESTIGE_IDS ordering)
+    pinned.sort((a, b) => {
+      const ai = PRESTIGE_IDS.indexOf(a.id);
+      const bi = PRESTIGE_IDS.indexOf(b.id);
+      if (ai === -1 && bi === -1) return 0;
+      if (ai === -1) return 1;
+      if (bi === -1) return -1;
+      return ai - bi;
+    });
+
+    const topK6 = pinned.slice(0, 6);
+    const contextLines = topK6.map((u, idx) => buildContextLine(u, idx));
+    const contextSummary = contextLines.join("\n\n");
+
+    return {
+      results: topK6,
+      contextSummary,
+      citedIds: topK6.map(u => u.id),
       intent
     };
   }
@@ -181,37 +292,34 @@ export async function searchUniversitiesRAG(
 
   const queryNorm = Math.sqrt(queryMagSq);
 
-  // Detect explicit intent signals from query
   const isPublicQuery = queryLower.includes("public") || queryLower.includes("government") || queryLower.includes("سرکاری");
   const isPrivateQuery = queryLower.includes("private") || queryLower.includes("پرائیویٹ");
   const isScholarshipQuery = intent.type === "SCHOLARSHIP";
   const isLowFeeQuery = intent.isLowFee;
+  const isTopQuery = queryLower.includes("top") || queryLower.includes("best") || queryLower.includes("ranked") || queryLower.includes("famous") || queryLower.includes("بہترین");
 
-  // Check alias matches
-  const matchedAliasKeywords: string[] = [];
-  Object.entries(ALIAS_MAP).forEach(([aliasKey, keywords]) => {
-    if (new RegExp(`\\b${aliasKey}\\b`, "i").test(queryLower)) {
-      matchedAliasKeywords.push(...keywords);
-    }
-  });
+  // Pinned universities from explicit alias mentions (for SEARCH queries that name specific universities)
+  const pinnedFromAliases = intent.detectedUniversities && intent.detectedUniversities.length > 0
+    ? resolvePinnedUniversities(intent.detectedUniversities, allUniversities)
+    : [];
+  const pinnedIds = new Set(pinnedFromAliases.map(u => u.id));
 
   // Score all documents
   const scoredDocs = typedEmbeddings.vectorizedIndex.map(doc => {
     const uni = uniMap.get(doc.id);
-    if (!uni) return { id: doc.id, score: 0 };
+    if (!uni) return { id: doc.id, score: -1 };
+
+    // Pinned universities from explicit alias mentions: give them guaranteed high score
+    if (pinnedIds.has(doc.id)) {
+      return { id: doc.id, score: 99 };
+    }
 
     const effectiveCity = filters?.city && filters.city !== "all" && filters.city !== "All"
       ? filters.city
       : intent.detectedCity;
 
-    if (effectiveCity) {
-      if (uni.city.toLowerCase() !== effectiveCity.toLowerCase()) {
-        if (intent.type === "COMPARISON") {
-          // Keep comparison candidates across cities
-        } else {
-          return { id: doc.id, score: -1 };
-        }
-      }
+    if (effectiveCity && uni.city.toLowerCase() !== effectiveCity.toLowerCase()) {
+      return { id: doc.id, score: -1 };
     }
 
     if (filters?.province && filters.province !== "all" && filters.province !== "All") {
@@ -226,7 +334,7 @@ export async function searchUniversitiesRAG(
       }
     }
 
-    // Cosine Vector Similarity calculation
+    // Cosine Vector Similarity
     let dotProduct = 0;
     Object.keys(queryVector).forEach(term => {
       if (doc.vector[term]) {
@@ -234,132 +342,112 @@ export async function searchUniversitiesRAG(
       }
     });
 
-    let cosSim = (queryNorm > 0 && doc.norm > 0) ? (dotProduct / (queryNorm * doc.norm)) : 0;
-
-    // Feature Boosting
+    const cosSim = (queryNorm > 0 && doc.norm > 0) ? (dotProduct / (queryNorm * doc.norm)) : 0;
     let boost = 1.0;
 
-    // Direct Name Match
-    if (uni.name.toLowerCase().includes(queryLower) || (uni.name_urdu && uni.name_urdu.includes(queryLower))) {
-      boost += 2.0;
+    // Discipline match boost
+    if (intent.detectedDegree && uni.programs && uni.programs.some(p =>
+      p.toLowerCase().includes(intent.detectedDegree!.toLowerCase())
+    )) {
+      boost += 0.6;
     }
 
-    // Alias Keyword Boost
-    if (matchedAliasKeywords.length > 0) {
-      const nameLower = uni.name.toLowerCase();
-      if (matchedAliasKeywords.some(kw => nameLower.includes(kw))) {
-        boost += 2.5;
+    // Top/Best query: boost known prestige institutions
+    if (isTopQuery) {
+      const prestigeRank = PRESTIGE_IDS.indexOf(uni.id);
+      if (prestigeRank !== -1) {
+        boost += (PRESTIGE_IDS.length - prestigeRank) * 0.2;
       }
     }
 
-    // City Match Boost
-    if (intent.detectedCity && uni.city.toLowerCase() === intent.detectedCity.toLowerCase()) {
-      boost += 0.8;
-    }
-
-    // Discipline Match Boost
-    if (intent.detectedDegree && uni.programs && uni.programs.some(p => p.toLowerCase().includes(intent.detectedDegree!.toLowerCase()))) {
-      boost += 0.5;
-    }
-
-    // Sector Intent Boost
+    // Sector boost
     if (isPublicQuery && uni.type === "Public") boost += 0.4;
     if (isPrivateQuery && uni.type === "Private") boost += 0.4;
 
-    // Scholarship Intent Boost
+    // Scholarship boost
     if (isScholarshipQuery && (uni.has_hec_scholarship || uni.has_usaid_scholarship)) {
       boost += 0.8;
     }
 
-    // Low Fee Intent Boost
+    // Low fee boost
     if (isLowFeeQuery && uni.fee_range_max <= 150000) {
       boost += 0.6;
     }
 
-    // Max Fee Filter
+    // Max fee filter
     if (filters?.maxFee && filters.maxFee > 0) {
       if (uni.fee_range_max > filters.maxFee) {
-        boost *= 0.2;
+        boost *= 0.15;
       }
     }
 
-    const finalScore = (cosSim > 0 ? cosSim : 0.05) * boost;
+    const finalScore = (cosSim > 0 ? cosSim + 0.05 : 0.05) * boost;
     return { id: doc.id, score: finalScore };
   });
 
-  // Filter out invalid scores and sort descending
+  // Sort descending, exclude negatives
   const validScored = scoredDocs
     .filter(d => d.score > 0)
     .sort((a, b) => b.score - a.score);
 
-  // Pick top K universities
-  const topKDocs = validScored.slice(0, topK);
   const topUnis: University[] = [];
+  const seenIds = new Set<string>();
 
-  topKDocs.forEach(item => {
+  for (const item of validScored) {
+    if (topUnis.length >= topK) break;
     const u = uniMap.get(item.id);
-    if (u) topUnis.push(u);
-  });
+    if (u && !seenIds.has(u.id)) {
+      topUnis.push(u);
+      seenIds.add(u.id);
+    }
+  }
 
-  // Smart Context Fallback:
-  // If vector search returned fewer than topK, intelligently match based on intent instead of arbitrary alphabetical dumping
+  // Smart backfill when fewer than topK results found
   if (topUnis.length < topK) {
-    const existingIds = new Set(topUnis.map(u => u.id));
-
-    // 1. If user asked for scholarships, backfill with actual scholarship institutions
+    // Scholarship backfill
     if (isScholarshipQuery) {
       for (const u of allUniversities) {
         if (topUnis.length >= topK) break;
-        if ((u.has_hec_scholarship || u.has_usaid_scholarship) && !existingIds.has(u.id)) {
+        if ((u.has_hec_scholarship || u.has_usaid_scholarship) && !seenIds.has(u.id)) {
           topUnis.push(u);
-          existingIds.add(u.id);
+          seenIds.add(u.id);
         }
       }
     }
 
-    // 2. If user asked for a city, backfill with universities in that city
+    // City backfill - prefer prestige institutions
     if (intent.detectedCity) {
-      for (const u of allUniversities) {
+      const cityUnis = allUniversities
+        .filter(u => u.city.toLowerCase() === intent.detectedCity!.toLowerCase() && !seenIds.has(u.id))
+        .sort((a, b) => {
+          const ai = PRESTIGE_IDS.indexOf(a.id);
+          const bi = PRESTIGE_IDS.indexOf(b.id);
+          if (ai === -1 && bi === -1) return a.fee_range_max - b.fee_range_max;
+          if (ai === -1) return 1;
+          if (bi === -1) return -1;
+          return ai - bi;
+        });
+
+      for (const u of cityUnis) {
         if (topUnis.length >= topK) break;
-        if (u.city.toLowerCase() === intent.detectedCity.toLowerCase() && !existingIds.has(u.id)) {
-          topUnis.push(u);
-          existingIds.add(u.id);
-        }
+        topUnis.push(u);
+        seenIds.add(u.id);
       }
     }
 
-    // 3. If user asked for low fee, backfill with low fee public universities
+    // Low fee backfill
     if (isLowFeeQuery) {
       for (const u of allUniversities) {
         if (topUnis.length >= topK) break;
-        if (u.type === "Public" && u.fee_range_max <= 100000 && !existingIds.has(u.id)) {
+        if (u.type === "Public" && u.fee_range_max <= 100000 && !seenIds.has(u.id)) {
           topUnis.push(u);
-          existingIds.add(u.id);
+          seenIds.add(u.id);
         }
       }
     }
   }
 
-  // Build Context Summary for Prompt Grounding
-  const contextLines = topUnis.map((u, idx) => {
-    const scholarshipText = [
-      u.has_hec_scholarship ? "HEC Need-Based (100% Waiver)" : "",
-      u.has_usaid_scholarship ? "USAID MNBSP Scholarship" : "",
-      ...(u.scholarship_programs || [])
-    ].filter(Boolean).join(", ");
-
-    return `[University #${idx + 1}]
-- ID: ${u.id}
-- Name: ${u.name} ${u.name_urdu ? `(${u.name_urdu})` : ""}
-- Location: ${u.city}, ${u.province}
-- Sector: ${u.type} Sector | Category: ${u.category} | Chartered by: ${u.chartered_by || "Government"}
-- Annual Fee Max: PKR ${u.fee_range_max.toLocaleString()} / year
-- Scholarships: ${scholarshipText || "Institutional Aid via Financial Aid Office"}
-- Financial Aid Office / Details: ${u.financial_aid_office || "Contact Admissions Office"} - ${u.scholarship_details || ""}
-- Programs Offered: ${u.programs.join(", ")}
-- Website: ${u.website || "N/A"}`;
-  });
-
+  const contextLines = topUnis.map((u, idx) => buildContextLine(u, idx));
   const contextSummary = contextLines.join("\n\n");
   const citedIds = topUnis.map(u => u.id);
 
@@ -369,4 +457,23 @@ export async function searchUniversitiesRAG(
     citedIds,
     intent
   };
+}
+
+function buildContextLine(u: University, idx: number): string {
+  const scholarshipText = [
+    u.has_hec_scholarship ? "HEC Need-Based (100% Waiver)" : "",
+    u.has_usaid_scholarship ? "USAID MNBSP Scholarship" : "",
+    ...(u.scholarship_programs || [])
+  ].filter(Boolean).join(", ");
+
+  return `[University #${idx + 1}]
+- ID: ${u.id}
+- Name: ${u.name} ${u.name_urdu ? `(${u.name_urdu})` : ""}
+- Location: ${u.city}, ${u.province}
+- Sector: ${u.type} Sector | Category: ${u.category} | Chartered by: ${u.chartered_by || "Government"}
+- Annual Fee Max: PKR ${u.fee_range_max.toLocaleString()} / year
+- Scholarships: ${scholarshipText || "Institutional Aid via Financial Aid Office"}
+- Financial Aid Office / Details: ${u.financial_aid_office || "Contact Admissions Office"} - ${u.scholarship_details || ""}
+- Programs Offered: ${u.programs.join(", ")}
+- Website: ${u.website || "N/A"}`;
 }
