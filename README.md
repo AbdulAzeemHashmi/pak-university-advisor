@@ -1,558 +1,225 @@
-# Pak University Advisor
+﻿<div align="center">
 
-<div align="center">
+<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=0,2,2,5,30&height=200&section=header&text=Pak%20University%20Advisor&fontSize=42&fontColor=ffffff&fontAlignY=38&desc=%F0%9F%87%B5%F0%9F%87%B0%20Find%20your%20university%2C%20your%20way&descAlignY=58&descSize=18&animation=twinkling" alt="Pak University Advisor Header" width="100%">
 
-<img src="https://raw.githubusercontent.com/AbdulAzeemHashmi/pak-university-advisor/main/public/favicon.ico" alt="Pak University Advisor Logo" width="80" height="80" />
-
-<h3>Bilingual AI-Powered Higher Education & Scholarship Guidance Platform</h3>
+<br/>
 
 <p>
-  <strong>Empowering students across Pakistan to discover, compare, and navigate 260+ recognized higher education institutions with real-time RAG AI guidance.</strong>
+  <a href="https://pak-university-advisor.vercel.app"><img src="https://img.shields.io/badge/Live%20Demo-pak--university--advisor.vercel.app-01411C?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Demo"></a>
+  <a href="https://github.com/AbdulAzeemHashmi/pak-university-advisor"><img src="https://img.shields.io/github/stars/AbdulAzeemHashmi/pak-university-advisor?style=for-the-badge&color=F5A623&labelColor=01411C&logo=github" alt="GitHub Stars"></a>
+  <img src="https://img.shields.io/badge/Next.js-15-000000?style=for-the-badge&logo=next.js&logoColor=white" alt="Next.js 15">
+  <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript 5">
+  <img src="https://img.shields.io/badge/Deployed-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Deployed on Vercel">
 </p>
 
-[![Vercel Deployment](https://img.shields.io/badge/Vercel-Live_Deployment-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://pak-university-advisor.vercel.app/)
-[![Next.js](https://img.shields.io/badge/Next.js_15-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
-[![React](https://img.shields.io/badge/React_19-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript_5-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS_4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
-[![Auth.js](https://img.shields.io/badge/Auth.js_v5-black?style=for-the-badge&logo=next.js&logoColor=white)](https://authjs.dev/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-01411C.svg?style=for-the-badge)](LICENSE)
+<img src="https://readme-typing-svg.demolab.com?font=Space+Grotesk&weight=700&size=22&duration=2800&pause=900&color=1A8F3C&center=true&vCenter=true&width=750&lines=Search+250%2B+Pakistani+universities;Filter+by+budget%2C+city+%26+program;Discover+HEC+%26+USAID+scholarships;AI-powered+bilingual+recommendations;English+%2B+%D8%A7%D8%B1%D8%AF%D9%88+RTL+support" alt="Animated project highlights">
 
-<br />
+<br/>
 
-<p align="center">
-  <a href="https://pak-university-advisor.vercel.app/">View Live Application</a>
-  •
-  <a href="https://github.com/AbdulAzeemHashmi/pak-university-advisor">GitHub Repository</a>
-  •
-  <a href="#quick-start">Quick Start</a>
-  •
-  <a href="#api-reference">API Docs</a>
-</p>
+> **Open source platform helping Pakistani students discover universities, compare options, and unlock scholarship pathways.**
 
 </div>
 
 ---
 
-## Table of Contents
+## 🎯 What Problem Does This Solve?
 
-- [Overview](#overview)
-- [System Architecture](#system-architecture)
-- [Key Features](#key-features)
-- [Dataset & Data Engineering](#dataset--data-engineering)
-  - [Web Scraping Pipeline](#web-scraping-pipeline)
-  - [Data Cleansing & Normalization](#data-cleansing--normalization)
-  - [Offline TF-IDF Vector Embedding Generation](#offline-tf-idf-vector-embedding-generation)
-- [Frontend Architecture & UI/UX](#frontend-architecture--uiux)
-  - [Design System & Aesthetics](#design-system--aesthetics)
-  - [Bilingual Support & RTL Handling](#bilingual-support--rtl-handling)
-  - [Client Components & Pages](#client-components--pages)
-- [Backend Services & API Architecture](#backend-services--api-architecture)
-  - [RAG AI Search Engine](#rag-ai-search-engine)
-  - [Structured Recommendation Engine](#structured-recommendation-engine)
-  - [Security & Rate Limiting](#security--rate-limiting)
-- [Authentication, Security & Mail Delivery](#authentication-security--mail-delivery)
-  - [User Registration & Login Flow](#user-registration--login-flow)
-  - [Forgot Password & Verification Flow](#forgot-password--verification-flow)
-  - [Reset Password Execution](#reset-password-execution)
-  - [Transactional Mail Service](#transactional-mail-service)
-- [Database Architecture & Persistence](#database-architecture--persistence)
-- [API Reference](#api-reference)
-- [Environment Configuration](#environment-configuration)
-- [Quick Start & Local Development](#quick-start--local-development)
-- [Project Directory Structure](#project-directory-structure)
-- [License](#license)
+Choosing a university in Pakistan means digging through dozens of websites for fees, locations, programs, and scholarship eligibility. For students with limited budgets, this process is overwhelming and often results in missed opportunities.
+
+**Pak University Advisor** centralizes all of this into a single bilingual experience. Students discover realistic options, understand their tradeoffs, and find a practical next step rather than guessing in the dark.
+
+> **Important:** University fees and scholarship availability change frequently. Use this platform as a discovery and planning tool, then confirm details directly with institutions and scholarship providers.
 
 ---
 
-## Overview
+## ✨ Features at a Glance
 
-Pak University Advisor is an end-to-end higher education portal designed specifically for Pakistani students, parents, and academic counselors. Finding up-to-date information regarding tuition fees, HEC recognition, provincial quotas, and financial aid in Pakistan is traditionally fragmented.
-
-This platform centralizes data for **260+ recognized public and private universities** across Islamabad Capital Territory, Punjab, Sindh, Khyber Pakhtunkhwa, Balochistan, Azad Jammu and Kashmir, and Gilgit-Baltistan. The platform pairs verified institutional records with an offline sub-30ms vector search index and Google Gemini LLM integration via OpenRouter, delivering grounded career counseling in both English and Urdu.
+| Feature | What It Does |
+|---|---|
+| 🎓 **University Discovery** | Search 250+ recognized institutions by name, city, province, sector, degree, and distance learning |
+| 💰 **Budget Aware Filtering** | Filter universities whose annual fees fit within your PKR budget |
+| 🏆 **Scholarship Fallback** | When no direct match exists, surface HEC and USAID scholarship pathway institutions |
+| 🤖 **AI Advisor** | Get personalized bilingual recommendations powered by OpenRouter |
+| ⚖️ **Side by Side Comparison** | Compare universities on fees, programs, rankings, location, and aid |
+| ⭐ **Shortlists** | Save promising universities to a personal shortlist |
+| 🌐 **English and Urdu** | Full bilingual support with right to left Urdu layouts |
+| 🔐 **Accounts** | Register, sign in, manage your profile, and reset your password |
+| 🔍 **Smart Search** | Recognizes acronyms like FAST, NUCES, NUST, LUMS, UET, COMSATS, GIKI, IBA, GCU, and more |
 
 ---
 
-## System Architecture
-
-The following diagram illustrates the application flow across client interfaces, localization middleware, serverless API routes, vector retrieval, external AI services, database layers, and transactional mail services:
+## 🗺️ User Journey
 
 ```mermaid
-flowchart TD
-    subgraph CLIENT_LAYER["Client Layer (Next.js 15 / React 19)"]
-        UI_EN["English Portal (/en)"]
-        UI_UR["Urdu RTL Portal (/ur)"]
-        MODAL_RAG["RAG AI Counselor Drawer"]
-        MODAL_REC["Structured Advisor Form"]
-        MODAL_COMP["4-Way Comparison Matrix"]
-        MODAL_AUTH["Auth, Reset & Profile"]
-    end
-
-    subgraph MIDDLEWARE_LAYER["Routing & Middleware"]
-        MW["next-intl Localization Middleware"]
-        GUARD["AuthGuard Session Validator"]
-    end
-
-    subgraph BACKEND_LAYER["Next.js Serverless Route Handlers (/api)"]
-        API_RAG["/api/rag-chat (Hybrid Vector Search)"]
-        API_REC["/api/ai-recommend (Rule-based + LLM)"]
-        API_UNI["/api/universities (Search & Filters)"]
-        API_SCH["/api/scholarships (HEC/USAID List)"]
-        API_SL["/api/shortlist (Save & Sync)"]
-        API_AUTH["/api/auth/* (Credentials, Forgot, Reset)"]
-    end
-
-    subgraph VECTOR_ENGINE["Offline RAG Vector Engine"]
-        VEC_JSON[("university_embeddings.json (TF-IDF N-Grams)")]
-        COS_CALC["Cosine Similarity & Intent Booster"]
-    end
-
-    subgraph EXTERNAL_SERVICES["External Services"]
-        OPENROUTER["OpenRouter API (Gemini 2.0 Flash Lite)"]
-        RESEND["Resend API (Transactional OTP Emails)"]
-        XATA_DB[("Xata Serverless Database")]
-    end
-
-    subgraph LOCAL_STORE["Dual Persistence Layer"]
-        MEM_STORE["In-Memory Global Cache"]
-        TMP_FS["Writable Temp Filesystem (/tmp)"]
-    end
-
-    UI_EN --> MW
-    UI_UR --> MW
-    MW --> GUARD
-
-    MODAL_RAG --> API_RAG
-    MODAL_REC --> API_REC
-    UI_EN --> API_UNI
-    UI_UR --> API_UNI
-    MODAL_COMP --> API_UNI
-    MODAL_AUTH --> API_AUTH
-    MODAL_AUTH --> API_SL
-
-    API_RAG --> COS_CALC
-    COS_CALC --> VEC_JSON
-    API_RAG --> OPENROUTER
-
-    API_REC --> API_UNI
-    API_REC --> OPENROUTER
-
-    API_AUTH --> RESEND
-    API_AUTH --> MEM_STORE
-    API_AUTH --> TMP_FS
-    API_AUTH --> XATA_DB
-    API_SL --> MEM_STORE
-    API_SL --> TMP_FS
+flowchart LR
+    A[📱 Open App] --> B[🔑 Sign In or Register]
+    B --> C[🔍 Search Universities]
+    C --> D{💰 Fits Budget?}
+    D -->|Yes| E[🎓 University Matches]
+    D -->|No| F[🏆 Scholarship Options]
+    E --> G[⚖️ Compare]
+    F --> G
+    G --> H[⭐ Add to Shortlist]
+    H --> I[🤖 Get AI Recommendation]
 ```
 
 ---
 
-## Key Features
+## 🛠️ Technology Stack
 
-| Capability | Technical Implementation | Description |
-|---|---|---|
-| **RAG AI Admissions Counselor** | Cosine Similarity vector store + OpenRouter Gemini LLM | Answers student inquiries with factual data grounded in 260+ university profiles and HEC/USAID scholarship criteria. |
-| **Budget-Aware University Search** | Dynamic multi-predicate query evaluator | Filters institutions by maximum annual tuition budget (PKR), discipline, city, province, and charter status. |
-| **Smart Scholarship Fallback** | Fallback recommendation heuristic | Automatically surfaces 100% tuition-waiver alternatives (HEC Need-Based / USAID MNBSP) when private fees exceed user budget. |
-| **Multi-University Comparison** | Dynamic side-by-side matrix view | Compares up to 4 institutions simultaneously across fee schedules, rankings, contact info, and degree programs. |
-| **Shortlisting & Bookmarking** | NextAuth JWT session sync with persistence | Allows students to save preferred institutions to a private profile with instant synchronization. |
-| **Complete Urdu Localization** | `next-intl` with native Right-to-Left (RTL) styling | Full Urdu UI with localized typography, bidirectional layout switching, and Urdu text embeddings. |
-| **Secure Authentication** | Auth.js v5, bcryptjs 12-round salt, JWT cookies | Student registration, encrypted password storage, and protected client/server routes. |
-| **OTP Password Recovery** | 6-digit numeric token with stateless HMAC fallback | Delivers password reset codes via Resend transactional emails with dual memory and time-window validation. |
-
----
-
-## Dataset & Data Engineering
-
-The project contains a curated dataset representing Pakistan's higher education landscape. Data preparation is handled via automated scripts located in `scripts/`.
-
-### Web Scraping Pipeline
-
-1. **HEC Need-Based Scholarship Scraper (`scripts/scrape_hec_scholarships.py`)**:
-   - Scrapes the official Higher Education Commission portal (`hec.gov.pk`) for accredited institutions participating in the Need-Based Scholarship scheme.
-   - Handles custom user-agent headers, SSL verification bypass for government portals, and HTML entity cleanup.
-   - Exports verified institutions to `data/scholarship_lists/hec_scholarship_universities.csv`.
-
-2. **USAID Merit & Needs-Based Scholarship Scraper (`scripts/scrape_usaid_scholarships.py`)**:
-   - Scrapes participating partner universities under the USAID MNBSP initiative.
-   - Extracts focal officer details, regional coverage, and institutional contacts.
-   - Exports verified institutions to `data/scholarship_lists/usaid_scholarship_universities.csv`.
-
-### Data Cleansing & Normalization
-
-The pipeline in `scripts/merge_datasets.py` consolidates multiple raw CSV datasets into a single master index:
-
-- **Entity Deduplication**: Standardizes university names using regex normalization (`re.sub(r'[^a-z0-9]', '', name)`).
-- **Urdu Transliteration Mapping**: Maps English university titles to official Urdu names (for example, *National University of Sciences and Technology* to *نسٹ یونیورسٹی، اسلام آباد*).
-- **Contact & Web Parsing**: Validates domains, extracts institutional emails, and standardizes Pakistani telephone formatting (`+92-XX-XXXXXXX`).
-- **Fee Tier Modeling**: Ingests baseline annual tuition structures, assigning realistic Pakistani Rupee (PKR) fee ranges across medical, engineering, business, and general disciplines.
-- **Output Artifacts**:
-  - `data/processed/master_universities.json` (Structured JSON record list)
-  - `data/processed/master_universities.csv` (23-column master table)
-
-### Offline TF-IDF Vector Embedding Generation
-
-To achieve sub-30ms retrieval inside serverless function invocations without external vector database hosting costs, `scripts/generate_embeddings.js` compiles a custom lightweight vector store:
-
-```javascript
-// Tokenization pipeline supporting Latin characters and Urdu Unicode ranges
-function tokenize(text) {
-  const cleaned = text
-    .toLowerCase()
-    .replace(/[^\w\s\u0600-\u06FF]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-  
-  const words = cleaned.split(' ').filter(w => w.length > 1);
-  const grams = [];
-  
-  // Unigram and Bigram extraction
-  for (let i = 0; i < words.length; i++) {
-    grams.push(words[i]);
-    if (i < words.length - 1) {
-      grams.push(`${words[i]}_${words[i + 1]}`);
-    }
-  }
-  return grams;
-}
-```
-
-- **Inverse Document Frequency (IDF)**: Calculated across 260+ documents (`IDF(term) = ln(1 + N / DF(term))`).
-- **Vector Normalization**: Stores L2 norms per document for rapid Cosine Similarity dot-product computation during runtime queries.
-- **Output Index**: Saved to `data/processed/university_embeddings.json`.
+| Layer | Technologies |
+|---|---|
+| ⚛️ **Framework** | Next.js 15 App Router, React 19, TypeScript 5 |
+| 🎨 **Styling** | Tailwind CSS 4, PostCSS, Pakistani green and gold design system |
+| 🧩 **Components** | Radix UI, shadcn/ui patterns, Lucide React icons |
+| 🌍 **Routing and i18n** | next-intl, locale routes for `en` and `ur`, full RTL support |
+| 📊 **Data** | Processed CSV and JSON university datasets, local data access layer |
+| 🔐 **Auth** | Auth.js v5, JWT sessions, stateless HMAC OTP password reset |
+| 🤖 **AI** | OpenRouter API (free Gemini model) with bilingual local fallback |
+| 📧 **Email** | Resend API for password reset delivery, on screen OTP fallback |
+| 🚀 **Deployment** | Vercel with `/tmp` storage adapter for serverless filesystem compatibility |
+| 🧰 **Dev Tools** | ESLint, TypeScript strict mode, Python data preparation scripts |
 
 ---
 
-## Frontend Architecture & UI/UX
+## 🚀 Quick Start
 
-The frontend is built using Next.js 15 (App Router), React 19, and Tailwind CSS 4.
+### Requirements
 
-### Design System & Aesthetics
+- Node.js 20 or newer
+- npm
+- Python 3.8 or newer (for dataset preparation)
 
-The visual identity is designed with modern glassmorphism and curated HSL color tokens inspired by national themes:
-
-- **Primary Shade**: Pakistani Dark Green (`hsl(150, 97%, 13%)` / `#01411C`)
-- **Secondary Shade**: Islamic Vibrant Green (`hsl(137, 69%, 33%)` / `#1A8F3C`)
-- **Accent Shade**: Warm Gold (`hsl(37, 91%, 55%)` / `#F5A623`)
-- **Background**: Soft Clean Slate (`#f8f9fa`) with dark mode support (`hsl(160, 40%, 5%)`)
-- **Glassmorphism Components**: Backdrop blur filters (`backdrop-filter: blur(12px)`), subtle borders, and smooth hover micro-animations (`animate-fade-in`).
-
-### Bilingual Support & RTL Handling
-
-- **Localization Framework**: Configured via `next-intl` with routes nested under `src/app/[locale]/`.
-- **Bidirectional Typography**: Automatic font switching between system sans-serif for Latin scripts and `Noto Sans Arabic` with RTL directional flow (`dir="rtl"`) for Urdu locales.
-- **Dynamic Aliases**: Supports search queries in both English and Urdu (for example, searching *قائد اعظم یونیورسٹی* or *QAU* returns Quaid-i-Azam University).
-
-### Client Components & Pages
-
-- `src/components/UniversitiesSearchClient.tsx`: Interactive university search directory with instant debounced filtering.
-- `src/components/FilterBar.tsx`: Dynamic filter controls for Province, City, Discipline, Sector (Public/Private), Distance Learning, and Fee Range.
-- `src/components/UniversityCard.tsx`: Card component displaying sector badges, tuition fees, HEC/USAID scholarship tags, and quick-action buttons.
-- `src/components/UniversityDetailModal.tsx`: Comprehensive modal presenting campus locations, chartered authorities, contact emails, and direct phone links.
-- `src/components/CompareClientContent.tsx`: 4-column side-by-side comparison matrix.
-- `src/components/ShortlistClientContent.tsx`: Bookmarked university board synced with the authenticated user account.
-- `src/components/AIAdvisorModal.tsx`: Structured multi-step academic questionnaire generating personalized recommendations.
-- `src/components/RAGChatWidget.tsx`: Floating conversational AI drawer with real-time vector citations.
-
----
-
-## Backend Services & API Architecture
-
-The backend operates entirely on Next.js serverless API routes (`src/app/api/`), ensuring instant scaling and zero idle compute costs.
-
-### RAG AI Search Engine (`/api/rag-chat`)
-
-1. **Query Tokenization**: Incoming user messages are normalized and broken down into unigrams and bigrams.
-2. **Hybrid Vector Matching**:
-   - Evaluates Cosine Similarity against `university_embeddings.json`.
-   - Applies institutional acronym boosting (for example, mapping *NUST*, *FAST*, *LUMS*, *GIKI*, *UET*, *COMSATS*, *PIEAS*, *IBA* to canonical entity IDs).
-   - Injects intent bonuses for queries containing terms such as *scholarship*, *cheap*, *low fee*, *public sector*, or *سرکاری*.
-3. **Context Construction**: Formats the top 5 matched institutions into an authoritative factual brief.
-4. **LLM Synthesis**: Dispatches prompt to OpenRouter (`google/gemini-2.0-flash-lite-001:free`) with instructions to produce a bilingual (English & Urdu) response.
-
-### Structured Recommendation Engine (`/api/ai-recommend`)
-
-Accepts student constraints including annual budget, desired discipline, preferred city, and academic percentage. If the stated budget cannot accommodate target private institutions, the engine automatically extracts matching regional public institutions and eligible scholarship programs.
-
-### Security & Rate Limiting
-
-- **In-Memory IP Limiting**: Restricts API calls (max 15 requests/hour per IP on RAG chat and 10 requests/hour on AI recommendations) to protect upstream inference quotas.
-- **Input Validation**: Strict type, length, and range checks on all JSON payloads before execution.
-
----
-
-## Authentication, Security & Mail Delivery
-
-The authentication layer is implemented via Auth.js v5 (`next-auth`) combined with bcryptjs password hashing.
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Student
-    participant UI as Client UI
-    participant API as Auth API (/api/auth)
-    participant Store as Dual Store (Memory / Temp / Xata)
-    participant Resend as Resend Mail API
-
-    Note over Student,Resend: Registration Flow
-    Student->>UI: Submit Name, Email & Password
-    UI->>API: POST /api/auth/signup
-    API->>API: Hash password with bcryptjs (12 rounds)
-    API->>Store: Create User Record
-    Store-->>API: User ID confirmed
-    API-->>UI: 201 Created
-
-    Note over Student,Resend: Forgot Password Flow
-    Student->>UI: Enter Registered Email
-    UI->>API: POST /api/auth/forgot-password
-    API->>Store: Generate 6-Digit OTP & Stateless HMAC Hash
-    API->>Resend: Send Password Reset Email (HTML template)
-    Resend-->>Student: Deliver 6-digit OTP code to Inbox
-    API-->>UI: 200 OK (emailSent: true)
-
-    Note over Student,Resend: Reset Password Flow
-    Student->>UI: Enter OTP Code & New Password
-    UI->>API: POST /api/auth/reset-password
-    API->>Store: Verify OTP hash against memory / HMAC bucket
-    API->>Store: Update passwordHash (bcryptjs 12 rounds)
-    API->>Store: Invalidate used OTP token
-    API-->>UI: 200 OK (Password updated)
-    UI->>Student: Redirect to Login Page
-```
-
-### User Registration & Login Flow
-
-- **Endpoint**: `POST /api/auth/signup`
-- **Validation**: Ensures unique email addresses, valid string lengths, and trims formatting.
-- **Hashing**: Passwords are encrypted using `bcryptjs.hash(password, 12)`.
-- **Session Handling**: Uses JSON Web Tokens (JWT) stored in HTTP-only, secure cookies.
-
-### Forgot Password & Verification Flow
-
-- **Endpoint**: `POST /api/auth/forgot-password`
-- **OTP Generation**: Generates a secure 6-digit numeric OTP with a 15-minute expiration window.
-- **Stateless HMAC Resilience**: In addition to memory storage, tokens are hashed using HMAC-SHA256 based on 15-minute time buckets (`Math.floor(Date.now() / (15 * 60 * 1000))`). This ensures OTP codes remain fully verifiable even if serverless instances restart or re-deploy.
-- **Verification Endpoint**: `GET /api/auth/forgot-password?email=...&code=...` allows real-time pre-validation before final password submission.
-
-### Reset Password Execution
-
-- **Endpoint**: `POST /api/auth/reset-password`
-- **Validation**: Enforces an 8-character minimum password policy, checks OTP authenticity, updates the password hash, and removes the active token from the store.
-
-### Transactional Mail Service
-
-Emails are dispatched through the **Resend API**:
-
-- **From Address**: Configurable via `RESEND_FROM_EMAIL` (default: `Pak University Advisor <onboarding@resend.dev>`).
-- **Template Design**: Inline CSS styled HTML email featuring brand colors, clear OTP highlight badge, expiry notice, and direct password reset action button.
-- **Development Fallback**: In local development environments (`NODE_ENV !== "production"`), generated OTPs are logged directly to the server terminal.
-
----
-
-## Database Architecture & Persistence
-
-The platform utilizes a multi-tier persistence design to deliver high availability on both Vercel serverless functions and local environments:
-
-```
-+-------------------------------------------------------------------+
-|                        Application Layer                          |
-+-------------------------------------------------------------------+
-                                  |
-                                  v
-+-------------------------------------------------------------------+
-|                     Dual Persistence Interface                    |
-|                        (src/lib/local-store.ts)                   |
-+-------------------------------------------------------------------+
-        |                         |                         |
-        v                         v                         v
-+---------------+         +---------------+         +---------------+
-| Global Memory |         |  Writable FS  |         |     Xata      |
-|  Cache Store  |         |   (/tmp dir)  |         |  PostgreSQL   |
-+---------------+         +---------------+         +---------------+
-```
-
-### Storage Entities
-
-1. **User Table (`users`)**:
-   - `id` (UUID string)
-   - `name` (string)
-   - `email` (unique, lowercase string)
-   - `passwordHash` (bcryptjs string)
-   - `createdAt` (ISO timestamp)
-
-2. **Shortlist Store (`shortlists`)**:
-   - Map of `userId` to array of `universityId` strings (`Record<string, string[]>`).
-
-3. **Reset Token Store (`resetTokens`)**:
-   - `email` (string)
-   - `codeHash` (bcryptjs string)
-   - `expiresAt` (Unix timestamp)
-
-4. **University Catalog (`universities`)**:
-   - Static high-speed JSON record store parsed from `master_universities.json`.
-
----
-
-## API Reference
-
-| Route | Method | Payload / Parameters | Description |
-|---|---|---|---|
-| `/api/universities` | `GET` | `?searchQuery=&city=&province=&type=&category=&degree=&maxFee=&page=&limit=` | Returns paginated university records matching multi-predicate search criteria. |
-| `/api/scholarships` | `GET` | `?city=&degree=` | Returns all universities offering HEC Need-Based or USAID scholarships. |
-| `/api/rag-chat` | `POST` | `{ message: string, history?: Array, filters?: Object }` | Executes hybrid TF-IDF Cosine vector retrieval and generates a bilingual AI counselor response. |
-| `/api/ai-recommend` | `POST` | `{ budget: number, location: string, degree: string, academicMarks: string }` | Generates a structured bilingual admission and financial aid action plan. |
-| `/api/shortlist` | `GET` | None (requires authenticated JWT session) | Retrieves the authenticated student's saved university shortlist. |
-| `/api/shortlist` | `POST` | `{ universityId: string }` | Adds a university to the student's personal shortlist. |
-| `/api/shortlist` | `DELETE` | `{ universityId: string }` | Removes a university from the student's personal shortlist. |
-| `/api/auth/signup` | `POST` | `{ name: string, email: string, password: string }` | Registers a new student account. |
-| `/api/auth/forgot-password` | `POST` | `{ email: string }` | Generates a 6-digit OTP code and dispatches a reset email via Resend. |
-| `/api/auth/forgot-password` | `GET` | `?email=string&code=string` | Validates OTP code validity prior to password update submission. |
-| `/api/auth/reset-password` | `POST` | `{ email: string, code: string, password: string }` | Updates student account password upon verifying OTP token. |
-
----
-
-## Environment Configuration
-
-Create a `.env.local` file in the project root with the following keys:
-
-```env
-# NextAuth / Auth.js Configuration
-AUTH_SECRET=your-random-32-character-secret-key
-NEXTAUTH_URL=http://localhost:3000
-
-# OpenRouter AI API (Gemini LLM Inference)
-OPENROUTER_API_KEY=sk-or-v1-your-openrouter-key
-
-# Resend Transactional Email API (Password Reset)
-RESEND_API_KEY=re_your_resend_api_key
-RESEND_FROM_EMAIL=Pak University Advisor <onboarding@resend.dev>
-
-# Xata Database (Optional for Cloud Persistence)
-XATA_BRANCH=main
-XATA_API_KEY=your_xata_api_key
-XATA_DATABASE_URL=https://your-workspace.xata.sh/db/pak-university-advisor
-```
-
----
-
-## Quick Start & Local Development
-
-### 1. Prerequisites
-
-- Node.js version 18.18 or higher
-- npm, pnpm, or yarn
-- Python 3.9 or higher (only required if re-running web scrapers)
-
-### 2. Clone the Repository
+### Install and Run
 
 ```bash
 git clone https://github.com/AbdulAzeemHashmi/pak-university-advisor.git
 cd pak-university-advisor
-```
-
-### 3. Install Dependencies
-
-```bash
 npm install
-```
-
-### 4. Build Vector Embeddings
-
-Generate the TF-IDF vector index before starting the development server:
-
-```bash
-npm run generate-embeddings
-```
-
-### 5. Start Development Server
-
-```bash
+python scripts/merge_datasets.py
 npm run dev
 ```
 
-Open your browser and navigate to:
-- English Portal: [http://localhost:3000/en](http://localhost:3000/en)
-- Urdu Portal: [http://localhost:3000/ur](http://localhost:3000/ur)
+Open [http://localhost:3000](http://localhost:3000). Locale routes are at `/en` and `/ur`.
 
-### 6. Production Build & Linting
+### Available Commands
 
-```bash
-npm run lint
-npm run build
-npm run start
-```
+| Command | Purpose |
+|---|---|
+| `npm run dev` | Start the local development server |
+| `npm run build` | Create a production build |
+| `npm run start` | Serve the production build |
+| `npm run lint` | Run the configured linter |
+| `python scripts/merge_datasets.py` | Merge source university CSV datasets |
 
 ---
 
-## Project Directory Structure
+## ⚙️ Configuration
 
+Create a `.env.local` file for external services. The app has local fallbacks for most features, so you can explore the interface without every key configured.
+
+```env
+AUTH_SECRET=replace-with-a-long-random-secret
+OPENROUTER_API_KEY=your-openrouter-key
+RESEND_API_KEY=your-resend-key
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
+
+### Configuration Notes
+
+- `OPENROUTER_API_KEY` enables real AI recommendations. Without it, a bilingual heuristic response from local data is returned.
+- `RESEND_API_KEY` enables email delivery for password resets. Without it, a 6-digit code is displayed on screen so users can still reset their password.
+- `AUTH_SECRET` is used for JWT signing and stateless OTP verification. Use a long, random string in production.
+- Never commit `.env.local` or expose server-only keys in client code.
+
+---
+
+## 🔌 API Reference
+
+| Endpoint | Method | Responsibility |
+|---|---|---|
+| `/api/universities` | `GET` | Search, filter, and paginate universities |
+| `/api/scholarships` | `GET` | Return scholarship linked institutions |
+| `/api/ai-recommend` | `POST` | Generate a personalized bilingual recommendation |
+| `/api/shortlist` | `GET`, `POST`, `DELETE` | Read and update a user shortlist |
+| `/api/auth/[...nextauth]` | Auth.js | Session and credential authentication |
+| `/api/auth/forgot-password` | `POST`, `GET` | Request and verify reset OTPs |
+| `/api/auth/reset-password` | `POST` | Complete a password reset |
+
+---
+
+## 📁 Project Structure
+
+```text
 pak-university-advisor/
-├── data/
-│   ├── processed/
-│   │   ├── master_universities.csv          # Normalized 23-column master dataset
-│   │   ├── master_universities.json         # Master university JSON objects
-│   │   └── university_embeddings.json       # Pre-computed TF-IDF vector store
-│   └── scholarship_lists/
-│       ├── hec_scholarship_universities.csv # HEC partner institution list
-│       └── usaid_scholarship_universities.csv # USAID partner institution list
-├── public/
-│   └── favicon.ico                          # Application icon
-├── scripts/
-│   ├── generate_embeddings.js               # TF-IDF vector index compiler
-│   ├── merge_datasets.py                    # Cleansing and dataset unification script
-│   ├── scrape_hec_scholarships.py           # HEC scholarship web scraper
-│   ├── scrape_usaid_scholarships.py         # USAID MNBSP web scraper
-│   └── seed_xata.py                         # Xata database seeding utility
-├── src/
-│   ├── app/
-│   │   ├── [locale]/
-│   │   │   ├── auth/
-│   │   │   │   ├── forgot-password/page.tsx # Forgot password OTP request page
-│   │   │   │   ├── login/page.tsx           # Student login page
-│   │   │   │   ├── reset-password/page.tsx  # Password reset confirmation page
-│   │   │   │   └── signup/page.tsx          # New account registration page
-│   │   │   ├── compare/page.tsx             # 4-way comparison matrix page
-│   │   │   ├── profile/page.tsx             # User profile page
-│   │   │   ├── shortlist/page.tsx           # Saved universities shortlist page
-│   │   │   ├── layout.tsx                   # Localized root layout (RTL/LTR)
-│   │   │   └── page.tsx                     # Main directory and search page
-│   │   ├── api/
-│   │   │   ├── ai-recommend/route.ts        # Structured recommendation route
-│   │   │   ├── auth/                        # NextAuth, signup, forgot, reset routes
-│   │   │   ├── rag-chat/route.ts            # RAG hybrid search route
-│   │   │   ├── scholarships/route.ts        # Scholarship listing route
-│   │   │   ├── shortlist/route.ts           # Shortlist persistence route
-│   │   │   └── universities/route.ts        # Search & filtering route
-│   │   └── globals.css                      # Tailwind CSS 4 design tokens
-│   ├── components/
-│   │   ├── AIAdvisorModal.tsx               # Questionnaire counseling modal
-│   │   ├── AuthGuard.tsx                    # Client-side route protection
-│   │   ├── CompareClientContent.tsx         # University comparison table
-│   │   ├── FilterBar.tsx                    # Multi-parameter filter panel
-│   │   ├── HomeClientContent.tsx            # Main directory view container
-│   │   ├── LanguageSwitcher.tsx             # English / Urdu locale toggle
-│   │   ├── RAGChatWidget.tsx                # Floating RAG AI counselor drawer
-│   │   ├── UniversityCard.tsx               # University summary card
-│   │   └── UniversityDetailModal.tsx        # Comprehensive detail view
-│   ├── lib/
-│   │   ├── auth.ts                          # NextAuth configuration
-│   │   ├── db.ts                            # Data filtering and query layer
-│   │   ├── local-store.ts                   # Dual-tier user & token store
-│   │   ├── rag-retrieval.ts                 # Hybrid vector retrieval engine
-│   │   └── xata.ts                          # Xata database client
-│   └── messages/
-│       ├── en.json                          # English translations
-│       └── ur.json                          # Urdu translations
-├── middleware.ts                            # Next-intl routing middleware
-├── next.config.ts                           # Next.js configuration
-├── package.json                             # Dependencies and scripts
-├── tailwind.config.ts                       # Tailwind styling configuration
-└── tsconfig.json                            # TypeScript configuration
++-- data/
+|   +-- processed/                  # Merged master CSV and JSON data
+|   +-- scholarship_lists/          # HEC and USAID scholarship source lists
++-- scripts/
+|   +-- merge_datasets.py           # Build the processed university dataset
+|   +-- scrape_hec_scholarships.py  # Collect HEC scholarship data
+|   +-- scrape_usaid_scholarships.py
++-- src/
+|   +-- app/
+|   |   +-- [locale]/               # Localized English and Urdu pages
+|   |   |   +-- auth/               # Login, signup, and password reset flows
+|   |   |   +-- compare/            # Side by side comparison page
+|   |   |   +-- profile/            # User profile and sign-out
+|   |   |   +-- shortlist/          # Saved universities
+|   |   |   +-- universities/       # Search and filtering
+|   |   |   +-- page.tsx            # Home page
+|   |   +-- api/                    # AI, auth, shortlist, and university APIs
+|   |   +-- globals.css             # Global theme, RTL, glass UI, and animations
+|   |   +-- layout.tsx              # Root application layout
+|   +-- components/                 # Feature components and UI primitives
+|   +-- hooks/                      # Shared React hooks
+|   +-- i18n/                       # Routing and translation configuration
+|   +-- lib/                        # Data layer, Auth.js, and utility modules
+|   +-- messages/                   # en.json and ur.json translation files
+|   +-- types/                      # Shared TypeScript models
++-- next.config.ts
++-- package.json
 ```
 
 ---
 
-## License
+## 🔄 Data Workflow
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for complete terms.
+```text
+1. Place or update source CSVs in the repository root or data/ folder
+2. Run: python scripts/merge_datasets.py
+3. Review: data/processed/master_universities.json
+4. Start the app and verify search, budget filtering, and scholarship behavior
+5. Confirm fees and scholarship eligibility with official institutional sources
+```
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository and create a focused branch
+2. Make a small, documented change matching existing TypeScript and UI patterns
+3. Run `npm run build` and verify data checks before opening a pull request
+4. Explain the user problem, implementation approach, and verification steps in the PR
+
+Useful contribution areas include data freshness, scholarship verification, Urdu translations, accessibility improvements, and test coverage.
+
+---
+
+## 📄 License
+
+Distributed under the MIT License. See [LICENSE](LICENSE) for details.
+
+---
+
+<div align="center">
+
+### 🇵🇰🎓 Built for students navigating higher education in Pakistan
+
+<img src="https://readme-typing-svg.demolab.com?font=Space+Grotesk&weight=600&size=16&duration=3000&pause=1000&color=F5A623&center=true&vCenter=true&width=500&lines=Made+with+%E2%9D%A4%EF%B8%8F+for+Pakistani+students;Bilingual+%7C+Open+Source+%7C+Free+to+use" alt="Footer typing animation">
+
+<br/>
+
+<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=0,2,2,5,30&height=100&section=footer" alt="Decorative footer wave" width="100%">
+
+</div>
