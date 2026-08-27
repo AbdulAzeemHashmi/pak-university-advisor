@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { resetPassword } from "@/lib/local-store";
+import { PersistenceUnavailableError, resetPassword } from "@/lib/local-store";
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,6 +21,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, message: "Password updated successfully" });
   } catch (err) {
+    if (err instanceof PersistenceUnavailableError) {
+      return NextResponse.json({ error: "Password reset service is temporarily unavailable." }, { status: 503 });
+    }
     console.error("Reset password error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

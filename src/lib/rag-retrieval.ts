@@ -374,14 +374,23 @@ export async function searchUniversitiesRAG(
       boost += 0.6;
     }
 
-    // Max fee filter
+    // A budget is a hard constraint, not a weak ranking preference.
     if (filters?.maxFee && filters.maxFee > 0) {
       if (uni.fee_range_max > filters.maxFee) {
-        boost *= 0.15;
+        return { id: doc.id, score: -1 };
       }
     }
 
-    const finalScore = (cosSim > 0 ? cosSim + 0.05 : 0.05) * boost;
+    if (filters?.degree && filters.degree !== "all" && filters.degree !== "All" && !uni.programs.some(program => program.toLowerCase().includes(filters.degree!.toLowerCase()))) {
+      return { id: doc.id, score: -1 };
+    }
+    if (filters?.category && filters.category !== "all" && filters.category !== "All" && !uni.category.toLowerCase().includes(filters.category.toLowerCase())) {
+      return { id: doc.id, score: -1 };
+    }
+    if (filters?.distanceEducation && !uni.distance_education) return { id: doc.id, score: -1 };
+
+    // Avoid returning arbitrary institutions when the query has no lexical match.
+    const finalScore = cosSim > 0.015 ? cosSim * boost : 0;
     return { id: doc.id, score: finalScore };
   });
 
@@ -402,13 +411,14 @@ export async function searchUniversitiesRAG(
     }
   }
 
-  // Smart backfill when fewer than topK results found
+  // Smart backfill when fewer than topK results found. Every backfill still honours
+  // active user filters; generic queries deliberately return no fabricated matches.
   if (topUnis.length < topK) {
     // Scholarship backfill
     if (isScholarshipQuery) {
       for (const u of allUniversities) {
         if (topUnis.length >= topK) break;
-        if ((u.has_hec_scholarship || u.has_usaid_scholarship) && !seenIds.has(u.id)) {
+        if ((u.has_hec_scholarship || u.has_usaid_scholarship) && !seenIds.has(u.id) && (!filters?.maxFee || u.fee_range_max <= filters.maxFee)) {
           topUnis.push(u);
           seenIds.add(u.id);
         }
@@ -418,7 +428,7 @@ export async function searchUniversitiesRAG(
     // City backfill - prefer prestige institutions
     if (intent.detectedCity) {
       const cityUnis = allUniversities
-        .filter(u => u.city.toLowerCase() === intent.detectedCity!.toLowerCase() && !seenIds.has(u.id))
+        .filter(u => u.city.toLowerCase() === intent.detectedCity!.toLowerCase() && !seenIds.has(u.id) && (!filters?.maxFee || u.fee_range_max <= filters.maxFee))
         .sort((a, b) => {
           const ai = PRESTIGE_IDS.indexOf(a.id);
           const bi = PRESTIGE_IDS.indexOf(b.id);
@@ -439,7 +449,7 @@ export async function searchUniversitiesRAG(
     if (isLowFeeQuery) {
       for (const u of allUniversities) {
         if (topUnis.length >= topK) break;
-        if (u.type === "Public" && u.fee_range_max <= 100000 && !seenIds.has(u.id)) {
+        if (u.type === "Public" && u.fee_range_max <= 100000 && !seenIds.has(u.id) && (!filters?.maxFee || u.fee_range_max <= filters.maxFee)) {
           topUnis.push(u);
           seenIds.add(u.id);
         }
@@ -461,7 +471,7 @@ export async function searchUniversitiesRAG(
 
 function buildContextLine(u: University, idx: number): string {
   const scholarshipText = [
-    u.has_hec_scholarship ? "HEC Need-Based (100% Waiver)" : "",
+    u.has_hec_scholarship ? "HEC Need-Based flag in local dataset - verify current eligibility and coverage" : "",
     u.has_usaid_scholarship ? "USAID MNBSP Scholarship" : "",
     ...(u.scholarship_programs || [])
   ].filter(Boolean).join(", ");

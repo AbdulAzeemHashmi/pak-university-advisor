@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { registerUser } from "@/lib/local-store";
+import { PersistenceUnavailableError, registerUser } from "@/lib/local-store";
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
@@ -11,7 +11,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Enter a valid name, email, and password of at least 8 characters." }, { status: 422 });
   }
 
-  const result = await registerUser(name, email, password);
-  if (result.error) return NextResponse.json(result, { status: 409 });
-  return NextResponse.json(result, { status: 201 });
+  try {
+    const result = await registerUser(name, email, password);
+    if (result.error) return NextResponse.json(result, { status: 409 });
+    return NextResponse.json(result, { status: 201 });
+  } catch (error) {
+    if (error instanceof PersistenceUnavailableError) {
+      return NextResponse.json({ error: "Account service is temporarily unavailable." }, { status: 503 });
+    }
+    throw error;
+  }
 }

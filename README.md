@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
 
 <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=0,2,2,5,30&height=200&section=header&text=Pak%20University%20Advisor&fontSize=42&fontColor=ffffff&fontAlignY=38&desc=Find%20your%20university%2C%20your%20way&descAlignY=58&descSize=18&animation=twinkling" alt="Pak University Advisor Header" width="100%">
 
@@ -122,14 +122,18 @@ Create a `.env.local` file for external services. The app has local fallbacks fo
 AUTH_SECRET=replace-with-a-long-random-secret
 OPENROUTER_API_KEY=your-openrouter-key
 RESEND_API_KEY=your-resend-key
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+RESEND_FROM_EMAIL=Pak University Advisor <no-reply@your-verified-domain.example>
+NEXT_PUBLIC_APP_URL=https://pak-university-advisor.vercel.app
+XATA_DATABASE_URL=your-xata-database-url
+XATA_API_KEY=your-xata-api-key
 ```
 
 ### Configuration Notes
 
 - `OPENROUTER_API_KEY` enables real AI recommendations. Without it, a bilingual heuristic response from local data is returned.
-- `RESEND_API_KEY` enables email delivery for password resets. Without it, a 6 digit code is displayed on screen so users can still reset their password.
-- `AUTH_SECRET` is used for JWT signing and stateless OTP verification. Use a long, random string in production.
+- `XATA_DATABASE_URL` and `XATA_API_KEY` are mandatory in production. Accounts and shortlists are stored in Xata; local filesystem storage is development-only because Vercel instances are ephemeral.
+- `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, and `NEXT_PUBLIC_APP_URL` are required for production password-reset email. Verify the sender domain in Resend. Reset codes are never returned or logged in production.
+- `AUTH_SECRET` signs Auth.js JWT sessions. Use a long, random string in production.
 - Never commit `.env.local` or expose server only keys in client code.
 
 ---
@@ -191,6 +195,8 @@ pak-university-advisor/
 3. Review: data/processed/master_universities.json
 4. Start the app and verify search, budget filtering, and scholarship behavior
 5. Confirm fees and scholarship eligibility with official institutional sources
+
+Run `npm run validate-data` before each release. It checks master/embedding ID consistency and reports generated-looking contacts, non-HTTPS URLs, repeated fee estimates, and other records requiring official verification. The current source data has substantial warnings, so it must not be presented as a live authoritative fee or scholarship directory until official URLs, dates, fee-program pairs, and source citations are added.
 ```
 
 ---

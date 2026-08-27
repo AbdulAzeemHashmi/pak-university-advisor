@@ -16,9 +16,14 @@ export async function GET(request: NextRequest) {
     const pageStr = searchParams.get("page");
     const limitStr = searchParams.get("limit");
 
-    const maxFee = maxFeeStr ? parseInt(maxFeeStr, 10) : undefined;
-    const page = pageStr ? parseInt(pageStr, 10) : 1;
-    const limit = limitStr ? parseInt(limitStr, 10) : 12;
+    const maxFee = maxFeeStr ? Number(maxFeeStr) : undefined;
+    const requestedPage = pageStr ? Number(pageStr) : 1;
+    const requestedLimit = limitStr ? Number(limitStr) : 12;
+    if ((maxFee !== undefined && (!Number.isFinite(maxFee) || maxFee < 0)) || !Number.isInteger(requestedPage) || requestedPage < 1 || !Number.isInteger(requestedLimit) || requestedLimit < 1) {
+      return NextResponse.json({ error: "Invalid pagination or fee filter." }, { status: 422 });
+    }
+    const page = requestedPage;
+    const limit = Math.min(requestedLimit, 50);
 
     const data = await fetchUniversities({
       city,

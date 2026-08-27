@@ -1,9 +1,9 @@
 import { promises as fs } from "fs";
 import path from "path";
 import os from "os";
-import { randomUUID, createHmac } from "crypto";
+import { randomInt, randomUUID } from "crypto";
 import bcrypt from "bcryptjs";
-import { getXataClient } from "@/lib/xata";
+import { getXataClient, hasXataPersistence } from "@/lib/xata";
 
 export type LocalUser = {
   id: string;
@@ -11,6 +11,7 @@ export type LocalUser = {
   email: string;
   passwordHash: string;
   createdAt: string;
+  preferences?: Record<string, unknown>;
 };
 
 export type ResetToken = {
@@ -30,16 +31,49 @@ declare global {
   var __PAKS_STORE: LocalStore | undefined;
 }
 
-const HMAC_SECRET = process.env.AUTH_SECRET || "pak-uni-advisor-stateless-secret-2026";
-
 // Target /tmp directory for writable filesystem access on Vercel / serverless
 const tmpStorePath = path.join(os.tmpdir(), "pak_uni_advisor_store.json");
 const fallbackStorePath = path.join(process.cwd(), "data", "runtime", "store.json");
 
-function getStatelessOtpForBucket(email: string, bucket: number): string {
-  const hmac = createHmac("sha256", HMAC_SECRET).update(`${email.toLowerCase().trim()}:${bucket}`).digest("hex");
-  const num = parseInt(hmac.slice(0, 8), 16) % 1000000;
-  return num.toString().padStart(6, "0");
+export class PersistenceUnavailableError extends Error {
+  constructor() {
+    super("A durable database is required for account features in production.");
+  }
+}
+
+function requirePersistentStore() {
+  if (process.env.NODE_ENV === "production" && !hasXataPersistence()) {
+    throw new PersistenceUnavailableError();
+  }
+}
+
+type RemoteRecord = {
+  id: string;
+  email: string;
+  name: string;
+  password: string;
+  createdAt: string | Date;
+  preferences?: Record<string, unknown>;
+};
+
+function remoteTables() {
+  const db = getXataClient().db as unknown as {
+    users: {
+      filter: (filter: Record<string, unknown>) => { getFirst: () => Promise<RemoteRecord | null>; getMany: () => Promise<RemoteRecord[]> };
+      create: (data: Record<string, unknown>) => Promise<RemoteRecord>;
+      update: (id: string, data: Record<string, unknown>) => Promise<RemoteRecord>;
+    };
+    shortlists: {
+      filter: (filter: Record<string, unknown>) => { getFirst: () => Promise<{ id: string; universityId: string } | null>; getMany: () => Promise<{ id: string; universityId: string }[]> };
+      create: (data: Record<string, unknown>) => Promise<unknown>;
+      delete: (id: string) => Promise<unknown>;
+    };
+  };
+  return db;
+}
+
+function toPublicUser(user: RemoteRecord | LocalUser) {
+  return { id: user.id, name: user.name, email: user.email };
 }
 
 async function readStore(): Promise<LocalStore> {
@@ -77,8 +111,25 @@ async function writeStore(store: LocalStore) {
 }
 
 export async function registerUser(name: string, email: string, password: string) {
-  const store = await readStore();
   const normalizedEmail = email.toLowerCase().trim();
+
+  requirePersistentStore();
+  if (hasXataPersistence()) {
+    const users = remoteTables().users;
+    if (await users.filter({ email: normalizedEmail }).getFirst()) {
+      return { error: "An account with this email already exists." };
+    }
+    const user = await users.create({
+      email: normalizedEmail,
+      name: name.trim(),
+      password: await bcrypt.hash(password, 12),
+      preferences: {},
+      createdAt: new Date().toISOString()
+    });
+    return { user: toPublicUser(user) };
+  }
+
+  const store = await readStore();
 
   if (store.users.some((user) => user.email === normalizedEmail)) {
     return { error: "An account with this email already exists." };
@@ -95,29 +146,18 @@ export async function registerUser(name: string, email: string, password: string
   store.users.push(user);
   await writeStore(store);
 
-  // Optional background sync with Xata database if active
-  if (process.env.XATA_API_KEY && process.env.XATA_DATABASE_URL) {
-    try {
-      const xata = getXataClient();
-      // Sync record to Xata if users table exists
-      const dbAny = xata.db as unknown as Record<string, { create?: (data: Record<string, unknown>) => Promise<unknown> }>;
-      await dbAny.users?.create?.({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        createdAt: new Date(user.createdAt)
-      }).catch(() => null);
-    } catch (e) {
-      console.warn("Xata sync notice:", e);
-    }
-  }
-
   return { user: { id: user.id, name: user.name, email: user.email } };
 }
 
 export async function authenticateUser(email: string, password: string) {
-  const store = await readStore();
   const normalizedEmail = email.toLowerCase().trim();
+  if (hasXataPersistence()) {
+    const user = await remoteTables().users.filter({ email: normalizedEmail }).getFirst();
+    if (!user || !(await bcrypt.compare(password, user.password))) return null;
+    return toPublicUser(user);
+  }
+  if (process.env.NODE_ENV === "production") return null;
+  const store = await readStore();
   const user = store.users.find((item) => item.email === normalizedEmail);
   if (!user || !(await bcrypt.compare(password, user.passwordHash))) return null;
   return { id: user.id, name: user.name, email: user.email };
@@ -125,10 +165,19 @@ export async function authenticateUser(email: string, password: string) {
 
 export async function createResetToken(email: string, customCode?: string): Promise<string> {
   const normalizedEmail = email.toLowerCase().trim();
-  const store = await readStore();
+  requirePersistentStore();
+  const otpCode = customCode || randomInt(0, 1_000_000).toString().padStart(6, "0");
 
-  const currentBucket = Math.floor(Date.now() / (15 * 60 * 1000));
-  const otpCode = customCode || getStatelessOtpForBucket(normalizedEmail, currentBucket);
+  if (hasXataPersistence()) {
+    const users = remoteTables().users;
+    const user = await users.filter({ email: normalizedEmail }).getFirst();
+    if (!user) return "";
+    const preferences = { ...(user.preferences || {}), resetCodeHash: await bcrypt.hash(otpCode, 10), resetExpiresAt: Date.now() + 15 * 60 * 1000 };
+    await users.update(user.id, { preferences });
+    return otpCode;
+  }
+
+  const store = await readStore();
 
   store.resetTokens = store.resetTokens.filter((token) => token.email !== normalizedEmail);
   store.resetTokens.push({
@@ -144,22 +193,18 @@ export async function createResetToken(email: string, customCode?: string): Prom
 export async function verifyResetToken(email: string, code: string): Promise<boolean> {
   const normalizedEmail = email.toLowerCase().trim();
   const cleanCode = code.trim();
+  if (hasXataPersistence()) {
+    const user = await remoteTables().users.filter({ email: normalizedEmail }).getFirst();
+    const resetCodeHash = user?.preferences?.resetCodeHash;
+    const resetExpiresAt = user?.preferences?.resetExpiresAt;
+    return typeof resetCodeHash === "string" && typeof resetExpiresAt === "number" && resetExpiresAt >= Date.now() && await bcrypt.compare(cleanCode, resetCodeHash);
+  }
+  if (process.env.NODE_ENV === "production") return false;
   const store = await readStore();
 
   // 1. Check in-memory / file store
   const token = store.resetTokens.find((item) => item.email === normalizedEmail);
   if (token && token.expiresAt >= Date.now() && await bcrypt.compare(cleanCode, token.codeHash)) {
-    return true;
-  }
-
-  // 2. Check stateless HMAC bucket (current or previous 15-minute window)
-  const currentBucket = Math.floor(Date.now() / (15 * 60 * 1000));
-  const previousBucket = currentBucket - 1;
-
-  const validCurrent = getStatelessOtpForBucket(normalizedEmail, currentBucket);
-  const validPrevious = getStatelessOtpForBucket(normalizedEmail, previousBucket);
-
-  if (cleanCode === validCurrent || cleanCode === validPrevious) {
     return true;
   }
 
@@ -169,28 +214,27 @@ export async function verifyResetToken(email: string, code: string): Promise<boo
 export async function resetPassword(email: string, code: string, password: string): Promise<boolean> {
   const normalizedEmail = email.toLowerCase().trim();
 
-  const isValid = await verifyResetToken(normalizedEmail, code);
-  if (!isValid) {
-    return false;
+  requirePersistentStore();
+  if (hasXataPersistence()) {
+    const users = remoteTables().users;
+    const user = await users.filter({ email: normalizedEmail }).getFirst();
+    const valid = await verifyResetToken(normalizedEmail, code);
+    if (!user || !valid) return false;
+    const preferences = { ...(user.preferences || {}) };
+    delete preferences.resetCodeHash;
+    delete preferences.resetExpiresAt;
+    await users.update(user.id, { password: await bcrypt.hash(password, 12), preferences });
+    return true;
   }
+
+  if (!(await verifyResetToken(normalizedEmail, code))) return false;
 
   const store = await readStore();
   let user = store.users.find((item) => item.email === normalizedEmail);
   const newHash = await bcrypt.hash(password, 12);
 
-  if (user) {
-    user.passwordHash = newHash;
-  } else {
-    // Create/update user entry if registered on another serverless instance
-    user = {
-      id: randomUUID(),
-      name: normalizedEmail.split("@")[0],
-      email: normalizedEmail,
-      passwordHash: newHash,
-      createdAt: new Date().toISOString()
-    };
-    store.users.push(user);
-  }
+  if (!user) return false;
+  user.passwordHash = newHash;
 
   store.resetTokens = store.resetTokens.filter((item) => item.email !== normalizedEmail);
   await writeStore(store);
@@ -198,11 +242,24 @@ export async function resetPassword(email: string, code: string, password: strin
 }
 
 export async function getStoredShortlist(userId: string) {
+  if (hasXataPersistence()) {
+    const rows = await remoteTables().shortlists.filter({ userId }).getMany();
+    return rows.map(row => row.universityId);
+  }
+  if (process.env.NODE_ENV === "production") return [];
   const store = await readStore();
   return store.shortlists[userId] || [];
 }
 
 export async function updateStoredShortlist(userId: string, universityId: string, add: boolean) {
+  requirePersistentStore();
+  if (hasXataPersistence()) {
+    const table = remoteTables().shortlists;
+    const existing = await table.filter({ userId, universityId }).getFirst();
+    if (add && !existing) await table.create({ userId, universityId, addedAt: new Date().toISOString() });
+    if (!add && existing) await table.delete(existing.id);
+    return;
+  }
   const store = await readStore();
   const shortlist = new Set(store.shortlists[userId] || []);
   if (add) shortlist.add(universityId);

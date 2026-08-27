@@ -7,6 +7,14 @@ const tables = [
   {
     name: "universities",
     columns: []
+  },
+  {
+    name: "users",
+    columns: []
+  },
+  {
+    name: "shortlists",
+    columns: []
   }
 ] as const;
 
@@ -31,6 +39,11 @@ export const getXataClient = () => {
   instance = new XataClient();
   return instance;
 };
+
+/** Production user data must live in a durable database, never in a serverless filesystem. */
+export const hasXataPersistence = () => Boolean(
+  process.env.XATA_DATABASE_URL && process.env.XATA_API_KEY
+);
 
 // Fallback helper when Xata credentials are not active in environment
 export const getLocalMasterUniversities = (): University[] => {

@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { universityId } = body;
 
-    if (!universityId) {
+    if (typeof universityId !== "string" || !/^uni_\d+$/.test(universityId)) {
       return NextResponse.json({ error: "universityId is required" }, { status: 400 });
     }
 
@@ -46,7 +46,7 @@ export async function DELETE(request: NextRequest) {
     const body = await request.json();
     const { universityId } = body;
 
-    if (!universityId) {
+    if (typeof universityId !== "string" || !/^uni_\d+$/.test(universityId)) {
       return NextResponse.json({ error: "universityId is required" }, { status: 400 });
     }
 

@@ -2,7 +2,6 @@ import csv
 import os
 import json
 import urllib.request
-import ssl
 import html as html_parser
 import re
 
@@ -20,10 +19,6 @@ def scrape_usaid_scholarship_universities():
 
     usaid_list = []
 
-    ctx = ssl.create_default_context()
-    ctx.check_hostname = False
-    ctx.verify_mode = ssl.CERT_NONE
-
     req = urllib.request.Request(
         url,
         headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
@@ -31,7 +26,7 @@ def scrape_usaid_scholarship_universities():
 
     page_html = ""
     try:
-        with urllib.request.urlopen(req, context=ctx, timeout=10) as resp:
+        with urllib.request.urlopen(req, timeout=15) as resp:
             page_html = resp.read().decode(resp.headers.get_content_charset() or 'utf-8', errors='ignore')
             print(f"Connected to USAID MNBSP Portal successfully. Response length: {len(page_html)} bytes.")
     except Exception as e:

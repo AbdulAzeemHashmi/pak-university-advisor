@@ -1,12 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createResetToken } from "@/lib/local-store";
+import { PersistenceUnavailableError, createResetToken } from "@/lib/local-store";
+
+const requestCounts = new Map<string, { count: number; resetAt: number }>();
+
+function canRequestReset(ip: string) {
+  const now = Date.now();
+  const current = requestCounts.get(ip);
+  if (current && current.resetAt > now && current.count >= 5) return false;
+  requestCounts.set(ip, current && current.resetAt > now
+    ? { count: current.count + 1, resetAt: current.resetAt }
+    : { count: 1, resetAt: now + 60 * 60 * 1000 });
+  return true;
+}
 
 export async function POST(req: NextRequest) {
   try {
     const { email } = await req.json();
 
-    if (!email || typeof email !== "string") {
+    if (!email || typeof email !== "string" || !/^\S+@\S+\.\S+$/.test(email.trim())) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
+    }
+
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
+    if (!canRequestReset(ip)) {
+      return NextResponse.json({ error: "Too many reset requests. Please try again later." }, { status: 429 });
     }
 
     const normalizedEmail = email.toLowerCase().trim();
@@ -14,20 +31,22 @@ export async function POST(req: NextRequest) {
     // Generate or fetch reset token code
     const otp = await createResetToken(normalizedEmail);
 
+    // Return the same response for registered and unregistered addresses.
+    if (!otp) return NextResponse.json({ success: true, emailSent: false });
+
     // Attempt to send real email via Resend if configured
     const resendApiKey = process.env.RESEND_API_KEY;
-    const fromEmail = process.env.RESEND_FROM_EMAIL || "Pak University Advisor <onboarding@resend.dev>";
+    const fromEmail = process.env.RESEND_FROM_EMAIL || (process.env.NODE_ENV !== "production" ? "Pak University Advisor <onboarding@resend.dev>" : "");
     
-    // Derive the app URL from the request so it works on Vercel and localhost alike
-    const host = req.headers.get("x-forwarded-host") || req.headers.get("host") || "localhost:3000";
-    const proto = req.headers.get("x-forwarded-proto") || "http";
-    const appUrl = `${proto}://${host}`;
+    // An environment-owned URL prevents Host-header injection in password-reset links.
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV !== "production" ? "http://localhost:3000" : "");
 
     let emailSent = false;
 
-    if (resendApiKey && resendApiKey !== "re_placeholder") {
+    if (resendApiKey && resendApiKey !== "re_placeholder" && fromEmail && appUrl) {
       try {
-        const resetUrl = `${appUrl}/en/auth/reset-password?email=${encodeURIComponent(normalizedEmail)}&code=${otp}`;
+        // Codes stay out of URLs, browser history, analytics, and proxy logs.
+        const resetUrl = `${appUrl}/en/auth/reset-password?email=${encodeURIComponent(normalizedEmail)}`;
 
         const resendRes = await fetch("https://api.resend.com/emails", {
           method: "POST",
@@ -70,7 +89,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    console.log(`[OTP RESET CODE] Password reset OTP for ${normalizedEmail}: ${otp}`);
+    // Never log reset secrets: platform logs are broadly accessible operational data.
 
     // In production, do NOT expose devCode in API response for security
     const isDevMode = process.env.NODE_ENV !== "production";
@@ -81,6 +100,9 @@ export async function POST(req: NextRequest) {
       ...(isDevMode ? { devCode: otp } : {})
     });
   } catch (err) {
+    if (err instanceof PersistenceUnavailableError) {
+      return NextResponse.json({ error: "Password reset service is temporarily unavailable." }, { status: 503 });
+    }
     console.error("Forgot password error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
