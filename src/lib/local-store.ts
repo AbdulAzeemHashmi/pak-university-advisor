@@ -230,7 +230,7 @@ export async function resetPassword(email: string, code: string, password: strin
   if (!(await verifyResetToken(normalizedEmail, code))) return false;
 
   const store = await readStore();
-  let user = store.users.find((item) => item.email === normalizedEmail);
+  const user = store.users.find((item) => item.email === normalizedEmail);
   const newHash = await bcrypt.hash(password, 12);
 
   if (!user) return false;
