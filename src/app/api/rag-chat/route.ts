@@ -46,14 +46,32 @@ export async function POST(request: NextRequest) {
 
     // Step 1: Perform RAG Vector + Metadata Hybrid Retrieval
     const ragResult = await searchUniversitiesRAG(message, filters, 5);
-    const { results: citedUniversities, contextSummary } = ragResult;
+    const { results: citedUniversities, contextSummary, intent } = ragResult;
 
-    // Step 2: Build LLM Messages with RAG Grounding Context
+    // Step 2: Handle conversational greetings directly with contextual examples if needed
+    if (intent.type === "GREETING") {
+      const greetingEnglish = `Welcome to Pak University Advisor! I am your AI University Counselor.\n\nI can help you explore 260+ recognized Pakistani universities, fee structures, admissions, and 100% scholarships.\n\nHere are some questions you can ask me:\n• "Low cost CS universities in Lahore under 2.5 Lakh"\n• "How to apply for HEC Need-Based & USAID scholarships?"\n• "FAST vs NUST for Software Engineering"\n• "Top medical colleges in Sindh with fee details"`;
+      const greetingUrdu = `پاکستان یونیورسٹی ایڈوائزر میں خوش آمدید! میں آپ کا اے آئی یونیورسٹی کونسلر ہوں۔\n\nمیں ۲۶۰ سے زائد تسلیم شدہ پاکستانی یونیورسٹیوں، فیسوں، داخلوں اور مکمل اسکالرشپس کے بارے میں آپ کی رہنمائی کر سکتا ہوں۔\n\nآپ مجھ سے درج ذیل سوالات پوچھ سکتے ہیں:\n• "لاہور میں ڈھائی لاکھ سالانہ سے کم فیس والی کمپیوٹر سائنس یونیورسٹیاں"\n• "ایچ ای سی (HEC) اور یو ایس ایڈ اسکالرشپ کا طریقہ کار کیا ہے؟"\n• "سافٹ ویئر انجینئرنگ کے لیے فاسٹ بمقابلہ نسٹ"\n• "سندھ کے بہترین میڈیکل کالجز اور ان کی فیسیں"`;
+
+      const combinedGreeting = `${greetingEnglish}\n\n${greetingUrdu}`;
+      return NextResponse.json({
+        recommendation: cleanTextForHumanFormat(combinedGreeting),
+        citedUniversities: [],
+        contextCount: 0
+      });
+    }
+
+    // Step 3: Build LLM Messages with RAG Grounding Context & Model Failover
     const openRouterApiKey = process.env.OPENROUTER_API_KEY;
 
     if (openRouterApiKey) {
-      try {
-        const systemPrompt = `You are Pak University Advisor, an expert career and admissions counselor for Pakistani students.
+      const candidateModels = [
+        "google/gemini-2.0-flash-lite-001:free",
+        "meta-llama/llama-3.3-70b-instruct:free",
+        "mistralai/mistral-7b-instruct:free"
+      ];
+
+      const systemPrompt = `You are Pak University Advisor, an expert career and admissions counselor for Pakistani students.
 Your mission is to provide helpful, encouraging, accurate, and fact-grounded recommendations.
 
 RETRIEVED FACTUAL KNOWLEDGE BASE:
@@ -67,64 +85,106 @@ CRITICAL FORMATTING INSTRUCTION:
   1. English Section: Direct answer to student's query, top university recommendations with fee breakdowns and scholarship guidance.
   2. Urdu Section (اردو میں تفصیلی رہنمائی): The same advice in clear, natural Urdu.`;
 
-        // Format recent chat history
-        const formattedHistory = (history || []).slice(-4).map(h => ({
-          role: h.role,
-          content: h.content
-        }));
+      // Format recent chat history
+      const formattedHistory = (history || []).slice(-4).map(h => ({
+        role: h.role,
+        content: h.content
+      }));
 
-        const messages = [
-          { role: "system", content: systemPrompt },
-          ...formattedHistory,
-          { role: "user", content: message }
-        ];
+      const messages = [
+        { role: "system", content: systemPrompt },
+        ...formattedHistory,
+        { role: "user", content: message }
+      ];
 
-        const openRouterResp = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${openRouterApiKey}`,
-            "Content-Type": "application/json",
-            "HTTP-Referer": "https://pak-university-advisor.vercel.app",
-            "X-Title": "Pak University Advisor RAG"
-          },
-          body: JSON.stringify({
-            model: "google/gemini-2.0-flash-lite-001:free",
-            messages: messages,
-            temperature: 0.4
-          })
-        });
+      for (const modelName of candidateModels) {
+        try {
+          const openRouterResp = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${openRouterApiKey}`,
+              "Content-Type": "application/json",
+              "HTTP-Referer": "https://pak-university-advisor.vercel.app",
+              "X-Title": "Pak University Advisor RAG"
+            },
+            body: JSON.stringify({
+              model: modelName,
+              messages: messages,
+              temperature: 0.4
+            })
+          });
 
-        if (openRouterResp.ok) {
-          const aiData = await openRouterResp.json();
-          const content = aiData.choices?.[0]?.message?.content;
-          if (content) {
-            return NextResponse.json({
-              recommendation: cleanTextForHumanFormat(content),
-              citedUniversities,
-              contextCount: citedUniversities.length
-            });
+          if (openRouterResp.ok) {
+            const aiData = await openRouterResp.json();
+            const content = aiData.choices?.[0]?.message?.content;
+            if (content) {
+              return NextResponse.json({
+                recommendation: cleanTextForHumanFormat(content),
+                citedUniversities,
+                contextCount: citedUniversities.length
+              });
+            }
+          } else {
+            console.warn(`OpenRouter model ${modelName} returned status ${openRouterResp.status}`);
           }
+        } catch (err) {
+          console.warn(`OpenRouter error with model ${modelName}:`, err);
         }
-      } catch (err) {
-        console.warn("OpenRouter RAG error fallback:", err);
       }
     }
 
-    // Heuristic Fallback RAG response if OpenRouter is unavailable
-    const englishLines = citedUniversities.map((u, i) =>
-      `${i + 1}. ${u.name} (${u.city}) - Max Annual Fee: PKR ${u.fee_range_max.toLocaleString()} [${u.type} Sector]
+    // Step 4: Intelligent, Intent-Aware Heuristic Fallback if OpenRouter is unavailable
+    let fallbackEnglish = "";
+    let fallbackUrdu = "";
+
+    if (intent.type === "SCHOLARSHIP") {
+      const scholarshipUnis = citedUniversities.filter(u => u.has_hec_scholarship || u.has_usaid_scholarship);
+      const targetList = scholarshipUnis.length > 0 ? scholarshipUnis : citedUniversities;
+
+      const uniLinesEn = targetList.map((u, i) =>
+        `${i + 1}. ${u.name} (${u.city}) - Sector: ${u.type}
+   Available Grants: ${u.has_hec_scholarship ? "HEC Need-Based (100% Tuition Waiver + Monthly Stipend)" : ""} ${u.has_usaid_scholarship ? "USAID MNBSP Partner" : "Institutional Financial Aid"}
+   Financial Aid Office: ${u.financial_aid_office || "Admissions Office"}`
+      ).join("\n\n");
+
+      const uniLinesUr = targetList.map((u, i) =>
+        `${i + 1}. ${u.name} (${u.city}) - شعبہ: ${u.type === "Public" ? "سرکاری" : "پرائیویٹ"}
+   اسکالرشپ: ${u.has_hec_scholarship ? "ایچ ای سی نیڈ بیسڈ اسکالرشپ (مکمل ٹیوشن فیس معافی اور وظیفہ)" : "مالیاتی امداد دفتر سے رابطہ کریں"}`
+      ).join("\n\n");
+
+      fallbackEnglish = `Scholarship Pathways & Financial Aid Guide\n\nQuery: "${message}"\n\nTop Eligible Institutions Offering Need-Based Aid:\n\n${uniLinesEn}\n\nKey Application Guidelines:\n1. Apply for the HEC Need-Based Scholarship during regular admission intake.\n2. Submit parental income certificates and utility bill copies to the university Financial Aid Office.\n3. Explore USAID MNBSP for female students in agriculture, business, and engineering.`;
+      fallbackUrdu = `اسکالرشپ اور مالیاتی امداد کی تفصیلی رہنمائی\n\nتلاش: "${message}"\n\nایچ ای سی اور یو ایس ایڈ پارٹنر ادارے:\n\n${uniLinesUr}\n\nضروری ہدایات:\n۱. داخلہ فارم کے ساتھ اسکالرشپ فارم لازمی جمع کرائیں۔\n۲. آمدنی کا سرٹیفکیٹ اور یوٹیلیٹی بلز کی نقول تیار رکھیں۔`;
+    } else if (intent.type === "COMPARISON") {
+      const uniLinesEn = citedUniversities.slice(0, 3).map((u, i) =>
+        `${i + 1}. ${u.name} (${u.city})
+   - Annual Fee: PKR ${u.fee_range_max.toLocaleString()} / year [${u.type} Sector]
+   - Key Programs: ${u.programs.slice(0, 4).join(", ")}
+   - Aid & Scholarships: ${u.has_hec_scholarship ? "HEC Need-Based Available" : u.has_usaid_scholarship ? "USAID MNBSP Available" : "Institutional Aid Office"}`
+      ).join("\n\n");
+
+      const uniLinesUr = citedUniversities.slice(0, 3).map((u, i) =>
+        `${i + 1}. ${u.name} (${u.city})
+   - سالانہ فیس: ${u.fee_range_max.toLocaleString()} روپے [${u.type === "Public" ? "سرکاری" : "پرائیویٹ"}]
+   - اہم شعبے: ${u.programs.slice(0, 4).join(", ")}`
+      ).join("\n\n");
+
+      fallbackEnglish = `Institutional Comparison Breakdown\n\nQuery: "${message}"\n\nSide-by-Side Comparison of Matching Universities:\n\n${uniLinesEn}\n\nCounselor Advice:\n1. Compare campus location, commute, and hostel availability.\n2. Review past entry test merit cutoffs (NAT/ECAT/NET).\n3. Check degree accreditation from HEC, PEC, PMDC, or NCEAC.`;
+      fallbackUrdu = `یونیورسٹیوں کا تقابلی جائزہ\n\nتلاش: "${message}"\n\nمنتخب یونیورسٹیوں کا تقابل:\n\n${uniLinesUr}\n\nکونسلر کا مشورہ:\n۱. فیس، لوکیشن اور ہاسٹل کی سہولیات کا موازنہ کریں۔\n۲. متعلقہ کونسل (HEC / PEC / NCEAC) سے ڈگری کی منظوری چیک کریں۔`;
+    } else {
+      const uniLinesEn = citedUniversities.map((u, i) =>
+        `${i + 1}. ${u.name} (${u.city}) - Max Annual Fee: PKR ${u.fee_range_max.toLocaleString()} [${u.type} Sector]
    Programs: ${u.programs.slice(0, 4).join(", ")}
    Scholarships: ${u.has_hec_scholarship ? "HEC Need-Based Available" : u.has_usaid_scholarship ? "USAID MNBSP Available" : "Financial Aid Office Available"}`
-    ).join("\n\n");
+      ).join("\n\n");
 
-    const urduLines = citedUniversities.map((u, i) =>
-      `${i + 1}. ${u.name} (${u.city}) - سالانہ فیس: ${u.fee_range_max.toLocaleString()} روپے
+      const uniLinesUr = citedUniversities.map((u, i) =>
+        `${i + 1}. ${u.name} (${u.city}) - سالانہ فیس: ${u.fee_range_max.toLocaleString()} روپے
    اسکالرشپ: ${u.has_hec_scholarship ? "ایچ ای سی نیڈ بیسڈ اسکالرشپ" : "مالیاتی امداد دفتر سے رجوع کریں"}`
-    ).join("\n\n");
+      ).join("\n\n");
 
-    const fallbackEnglish = `🎓 RAG Grounded University Search & Advice\n\nQuery: "${message}"\n\nTop Grounded Database Matches:\n\n${englishLines}\n\n📌 Recommended Action Plan:\n1. Verify specific departmental fee structure with the university financial aid office.\n2. Apply early for HEC Need-Based Scholarships or institutional fee waivers.\n3. Track upcoming admission & entry test dates.`;
-
-    const fallbackUrdu = `🎓 آپ کی تلاش کے مطابق بہترین یونیورسٹیاں\n\nتلاش: "${message}"\n\nڈیٹا بیس کی تصدیق شدہ یونیورسٹیاں:\n\n${urduLines}\n\n📌 ضروری ہدایات:\n۱. داخلہ فارم کے ساتھ ایچ ای سی (HEC) اسکالرشپ فارم لازمی جمع کرائیں۔\n۲. این ٹی ایس (NTS) یا یونیورسٹی انٹری ٹیسٹ کی بروقت تیاری کریں۔`;
+      fallbackEnglish = `RAG Grounded University Search & Advice\n\nQuery: "${message}"\n\nTop Grounded Database Matches:\n\n${uniLinesEn}\n\nRecommended Action Plan:\n1. Verify specific departmental fee structure with the university financial aid office.\n2. Apply early for HEC Need-Based Scholarships or institutional fee waivers.\n3. Track upcoming admission & entry test dates.`;
+      fallbackUrdu = `آپ کی تلاش کے مطابق بہترین یونیورسٹیاں\n\nتلاش: "${message}"\n\nڈیٹا بیس کی تصدیق شدہ یونیورسٹیاں:\n\n${uniLinesUr}\n\nضروری ہدایات:\n۱. داخلہ فارم کے ساتھ ایچ ای سی (HEC) اسکالرشپ فارم لازمی جمع کرائیں۔\n۲. این ٹی ایس (NTS) یا یونیورسٹی انٹری ٹیسٹ کی بروقت تیاری کریں۔`;
+    }
 
     const combinedFallback = `${fallbackEnglish}\n\n${fallbackUrdu}`;
 
