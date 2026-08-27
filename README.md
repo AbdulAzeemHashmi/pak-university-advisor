@@ -1,6 +1,6 @@
 ﻿<div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=0,2,2,5,30&height=200&section=header&text=Pak%20University%20Advisor&fontSize=42&fontColor=ffffff&fontAlignY=38&desc=%F0%9F%87%B5%F0%9F%87%B0%20Find%20your%20university%2C%20your%20way&descAlignY=58&descSize=18&animation=twinkling" alt="Pak University Advisor Header" width="100%">
+<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=0,2,2,5,30&height=200&section=header&text=Pak%20University%20Advisor&fontSize=42&fontColor=ffffff&fontAlignY=38&desc=Find%20your%20university%2C%20your%20way&descAlignY=58&descSize=18&animation=twinkling" alt="Pak University Advisor Header" width="100%">
 
 <br/>
 
@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/Deployed-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Deployed on Vercel">
 </p>
 
-<img src="https://readme-typing-svg.demolab.com?font=Space+Grotesk&weight=700&size=22&duration=2800&pause=900&color=1A8F3C&center=true&vCenter=true&width=750&lines=Search+250%2B+Pakistani+universities;Filter+by+budget%2C+city+%26+program;Discover+HEC+%26+USAID+scholarships;AI-powered+bilingual+recommendations;English+%2B+%D8%A7%D8%B1%D8%AF%D9%88+RTL+support" alt="Animated project highlights">
+<img src="https://readme-typing-svg.demolab.com?font=Space+Grotesk&weight=700&size=22&duration=2800&pause=900&color=1A8F3C&center=true&vCenter=true&width=750&lines=Search+250%2B+Pakistani+universities;Filter+by+budget%2C+city+and+program;Discover+HEC+and+USAID+scholarships;AI+powered+bilingual+recommendations;English+and+Urdu+RTL+support" alt="Animated project highlights">
 
 <br/>
 
@@ -22,7 +22,7 @@
 
 ---
 
-## 🎯 What Problem Does This Solve?
+## What Problem Does This Solve?
 
 Choosing a university in Pakistan means digging through dozens of websites for fees, locations, programs, and scholarship eligibility. For students with limited budgets, this process is overwhelming and often results in missed opportunities.
 
@@ -32,57 +32,57 @@ Choosing a university in Pakistan means digging through dozens of websites for f
 
 ---
 
-## ✨ Features at a Glance
+## Features at a Glance
 
 | Feature | What It Does |
 |---|---|
-| 🎓 **University Discovery** | Search 250+ recognized institutions by name, city, province, sector, degree, and distance learning |
-| 💰 **Budget Aware Filtering** | Filter universities whose annual fees fit within your PKR budget |
-| 🏆 **Scholarship Fallback** | When no direct match exists, surface HEC and USAID scholarship pathway institutions |
-| 🤖 **AI Advisor** | Get personalized bilingual recommendations powered by OpenRouter |
-| ⚖️ **Side by Side Comparison** | Compare universities on fees, programs, rankings, location, and aid |
-| ⭐ **Shortlists** | Save promising universities to a personal shortlist |
-| 🌐 **English and Urdu** | Full bilingual support with right to left Urdu layouts |
-| 🔐 **Accounts** | Register, sign in, manage your profile, and reset your password |
-| 🔍 **Smart Search** | Recognizes acronyms like FAST, NUCES, NUST, LUMS, UET, COMSATS, GIKI, IBA, GCU, and more |
+| University Discovery | Search 250+ recognized institutions by name, city, province, sector, degree, and distance learning |
+| Budget Aware Filtering | Filter universities whose annual fees fit within your PKR budget |
+| Scholarship Fallback | When no direct match exists, surface HEC and USAID scholarship pathway institutions |
+| AI Advisor | Get personalized bilingual recommendations powered by OpenRouter |
+| Side by Side Comparison | Compare universities on fees, programs, rankings, location, and aid |
+| Shortlists | Save promising universities to a personal shortlist |
+| English and Urdu | Full bilingual support with right to left Urdu layouts |
+| Accounts | Register, sign in, manage your profile, and reset your password |
+| Smart Search | Recognizes acronyms like FAST, NUCES, NUST, LUMS, UET, COMSATS, GIKI, IBA, GCU, and more |
 
 ---
 
-## 🗺️ User Journey
+## User Journey
 
 ```mermaid
 flowchart LR
-    A[📱 Open App] --> B[🔑 Sign In or Register]
-    B --> C[🔍 Search Universities]
-    C --> D{💰 Fits Budget?}
-    D -->|Yes| E[🎓 University Matches]
-    D -->|No| F[🏆 Scholarship Options]
-    E --> G[⚖️ Compare]
+    A[Open App] --> B[Sign In or Register]
+    B --> C[Search Universities]
+    C --> D{Fits Budget?}
+    D -->|Yes| E[University Matches]
+    D -->|No| F[Scholarship Options]
+    E --> G[Compare]
     F --> G
-    G --> H[⭐ Add to Shortlist]
-    H --> I[🤖 Get AI Recommendation]
+    G --> H[Add to Shortlist]
+    H --> I[Get AI Recommendation]
 ```
 
 ---
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 | Layer | Technologies |
 |---|---|
-| ⚛️ **Framework** | Next.js 15 App Router, React 19, TypeScript 5 |
-| 🎨 **Styling** | Tailwind CSS 4, PostCSS, Pakistani green and gold design system |
-| 🧩 **Components** | Radix UI, shadcn/ui patterns, Lucide React icons |
-| 🌍 **Routing and i18n** | next-intl, locale routes for `en` and `ur`, full RTL support |
-| 📊 **Data** | Processed CSV and JSON university datasets, local data access layer |
-| 🔐 **Auth** | Auth.js v5, JWT sessions, stateless HMAC OTP password reset |
-| 🤖 **AI** | OpenRouter API (free Gemini model) with bilingual local fallback |
-| 📧 **Email** | Resend API for password reset delivery, on screen OTP fallback |
-| 🚀 **Deployment** | Vercel with `/tmp` storage adapter for serverless filesystem compatibility |
-| 🧰 **Dev Tools** | ESLint, TypeScript strict mode, Python data preparation scripts |
+| Framework | Next.js 15 App Router, React 19, TypeScript 5 |
+| Styling | Tailwind CSS 4, PostCSS, Pakistani green and gold design system |
+| Components | Radix UI, shadcn/ui patterns, Lucide React icons |
+| Routing and i18n | next-intl, locale routes for `en` and `ur`, full RTL support |
+| Data | Processed CSV and JSON university datasets, local data access layer |
+| Auth | Auth.js v5, JWT sessions, stateless HMAC OTP password reset |
+| AI | OpenRouter API (free Gemini model) with bilingual local fallback |
+| Email | Resend API for password reset delivery, on screen OTP fallback |
+| Deployment | Vercel with `/tmp` storage adapter for serverless filesystem compatibility |
+| Dev Tools | ESLint, TypeScript strict mode, Python data preparation scripts |
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Requirements
 
@@ -114,7 +114,7 @@ Open [http://localhost:3000](http://localhost:3000). Locale routes are at `/en` 
 
 ---
 
-## ⚙️ Configuration
+## Configuration
 
 Create a `.env.local` file for external services. The app has local fallbacks for most features, so you can explore the interface without every key configured.
 
@@ -128,13 +128,13 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 ### Configuration Notes
 
 - `OPENROUTER_API_KEY` enables real AI recommendations. Without it, a bilingual heuristic response from local data is returned.
-- `RESEND_API_KEY` enables email delivery for password resets. Without it, a 6-digit code is displayed on screen so users can still reset their password.
+- `RESEND_API_KEY` enables email delivery for password resets. Without it, a 6 digit code is displayed on screen so users can still reset their password.
 - `AUTH_SECRET` is used for JWT signing and stateless OTP verification. Use a long, random string in production.
-- Never commit `.env.local` or expose server-only keys in client code.
+- Never commit `.env.local` or expose server only keys in client code.
 
 ---
 
-## 🔌 API Reference
+## API Reference
 
 | Endpoint | Method | Responsibility |
 |---|---|---|
@@ -148,7 +148,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```text
 pak-university-advisor/
@@ -164,7 +164,7 @@ pak-university-advisor/
 |   |   +-- [locale]/               # Localized English and Urdu pages
 |   |   |   +-- auth/               # Login, signup, and password reset flows
 |   |   |   +-- compare/            # Side by side comparison page
-|   |   |   +-- profile/            # User profile and sign-out
+|   |   |   +-- profile/            # User profile and sign out
 |   |   |   +-- shortlist/          # Saved universities
 |   |   |   +-- universities/       # Search and filtering
 |   |   |   +-- page.tsx            # Home page
@@ -183,7 +183,7 @@ pak-university-advisor/
 
 ---
 
-## 🔄 Data Workflow
+## Data Workflow
 
 ```text
 1. Place or update source CSVs in the repository root or data/ folder
@@ -195,7 +195,7 @@ pak-university-advisor/
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository and create a focused branch
 2. Make a small, documented change matching existing TypeScript and UI patterns
@@ -206,7 +206,7 @@ Useful contribution areas include data freshness, scholarship verification, Urdu
 
 ---
 
-## 📄 License
+## License
 
 Distributed under the MIT License. See [LICENSE](LICENSE) for details.
 
@@ -214,9 +214,9 @@ Distributed under the MIT License. See [LICENSE](LICENSE) for details.
 
 <div align="center">
 
-### 🇵🇰🎓 Built for students navigating higher education in Pakistan
+### Built for students navigating higher education in Pakistan
 
-<img src="https://readme-typing-svg.demolab.com?font=Space+Grotesk&weight=600&size=16&duration=3000&pause=1000&color=F5A623&center=true&vCenter=true&width=500&lines=Made+with+%E2%9D%A4%EF%B8%8F+for+Pakistani+students;Bilingual+%7C+Open+Source+%7C+Free+to+use" alt="Footer typing animation">
+<img src="https://readme-typing-svg.demolab.com?font=Space+Grotesk&weight=600&size=16&duration=3000&pause=1000&color=F5A623&center=true&vCenter=true&width=500&lines=Made+with+care+for+Pakistani+students;Bilingual+and+Open+Source+and+Free+to+use" alt="Footer typing animation">
 
 <br/>
 
