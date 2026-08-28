@@ -1,11 +1,14 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const masterPath = path.join(__dirname, '../data/processed/master_universities.json');
 const outputPath = path.join(__dirname, '../data/processed/university_embeddings.json');
 
-const universities = JSON.parse(fs.readFileSync(masterPath, 'utf8'));
+const masterContents = fs.readFileSync(masterPath, 'utf8');
+const universities = JSON.parse(masterContents);
+const sourceHash = crypto.createHash('sha256').update(masterContents).digest('hex');
 
 function usableScholarshipText(value) {
   const text = String(value || '').trim();
@@ -104,6 +107,7 @@ const vectorizedIndex = documentTerms.map(doc => {
 const outputData = {
   version: "1.0",
   generatedAt: new Date().toISOString(),
+  sourceHash,
   totalDocuments: N,
   idf: idf,
   vectorizedIndex: vectorizedIndex

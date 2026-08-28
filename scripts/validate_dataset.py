@@ -6,6 +6,7 @@ records that need an official-source review before they are shown as facts.
 import json
 import re
 import sys
+import hashlib
 from collections import Counter
 from pathlib import Path
 
@@ -14,7 +15,9 @@ DATASET = ROOT / "data" / "processed" / "master_universities.json"
 EMBEDDINGS = ROOT / "data" / "processed" / "university_embeddings.json"
 
 def main() -> int:
-    records = json.loads(DATASET.read_text(encoding="utf-8"))
+    dataset_bytes = DATASET.read_bytes()
+    dataset_contents = dataset_bytes.decode("utf-8")
+    records = json.loads(dataset_contents)
     embeddings = json.loads(EMBEDDINGS.read_text(encoding="utf-8"))
     errors: list[str] = []
     warnings: list[str] = []
@@ -24,6 +27,9 @@ def main() -> int:
         errors.append("duplicate university IDs")
     if set(ids) != {item.get("id") for item in embeddings.get("vectorizedIndex", [])}:
         errors.append("embedding index IDs do not match the master dataset")
+    expected_source_hash = hashlib.sha256(dataset_bytes).hexdigest()
+    if embeddings.get("sourceHash") != expected_source_hash:
+        errors.append("embedding index is stale; run npm run generate-embeddings")
 
     for item in records:
         label = f"{item.get('id', '?')} ({item.get('name', '?')})"

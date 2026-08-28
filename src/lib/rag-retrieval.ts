@@ -181,8 +181,8 @@ export function detectQueryIntent(text: string): QueryIntent {
     "\\bcs\\b": "computer science",
     "\\bse\\b": "software engineering",
     "\\bai\\b": "artificial intelligence",
-    "\\bds\\b": "data science",
     "\\bbds\\b": "bds",
+    "\\bdata\s*sci(?:ence)?\\b": "data science",
     "\\bbba\\b": "business administration",
   };
   let detectedDegree = disciplines.find(d => q.includes(d));
@@ -284,7 +284,11 @@ export async function searchUniversitiesRAG(
 
   // COMPARISON: Guarantee the explicitly named universities always appear
   if (intent.type === "COMPARISON" && intent.detectedUniversities && intent.detectedUniversities.length > 0) {
-    const pinned = resolvePinnedUniversities(intent.detectedUniversities, allUniversities);
+    const comparisonMaxFee = [filters?.maxFee, intent.maxFee]
+      .filter((value): value is number => typeof value === "number" && Number.isFinite(value) && value > 0)
+      .reduce<number | undefined>((minimum, value) => minimum === undefined ? value : Math.min(minimum, value), undefined);
+    const pinned = resolvePinnedUniversities(intent.detectedUniversities, allUniversities)
+      .filter(uni => matchesActiveConstraints(uni, intent, filters, comparisonMaxFee));
 
     const topK6 = pinned.slice(0, 6);
     const contextLines = topK6.map((u, idx) => buildContextLine(u, idx));
