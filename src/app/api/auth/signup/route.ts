@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { hasStrongPassword, PASSWORD_MIN_LENGTH, PersistenceUnavailableError, registerUser } from "@/lib/local-store";
+import { AccountServiceError, hasStrongPassword, PASSWORD_MIN_LENGTH, PersistenceUnavailableError, registerUser } from "@/lib/local-store";
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     if (result.error) return NextResponse.json(result, { status: 409 });
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
-    if (error instanceof PersistenceUnavailableError) {
+    if (error instanceof PersistenceUnavailableError || error instanceof AccountServiceError) {
       return NextResponse.json({ error: "Account service is temporarily unavailable." }, { status: 503 });
     }
     throw error;

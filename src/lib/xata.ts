@@ -45,6 +45,14 @@ export const hasXataPersistence = () => Boolean(
   process.env.XATA_DATABASE_URL && process.env.XATA_API_KEY
 );
 
+export function getAccountServiceStatus() {
+  const missing: string[] = [];
+  if (!process.env.XATA_DATABASE_URL) missing.push("XATA_DATABASE_URL");
+  if (!process.env.XATA_API_KEY) missing.push("XATA_API_KEY");
+  if (!process.env.AUTH_SECRET || process.env.AUTH_SECRET === "local-development-secret-change-me") missing.push("AUTH_SECRET");
+  return { ready: missing.length === 0, missing };
+}
+
 // Fallback helper when Xata credentials are not active in environment
 export const getLocalMasterUniversities = (): University[] => {
   return masterJsonData as unknown as University[];

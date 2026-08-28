@@ -23,6 +23,12 @@ export default function LoginPage() {
     setError(null);
 
     try {
+      const serviceRes = await fetch("/api/health/auth", { cache: "no-store" });
+      if (!serviceRes.ok) {
+        setError("Sign-in is temporarily unavailable because the account service is not configured. Please try again later.");
+        return;
+      }
+
       const result = await signIn("credentials", {
         email,
         password,
@@ -34,8 +40,8 @@ export default function LoginPage() {
       } else {
         router.push("/");
       }
-    } catch (err) {
-      setError("An unexpected error occurred.");
+    } catch {
+      setError("The account service could not be reached. Please try again later.");
     } finally {
       setLoading(false);
     }

@@ -134,6 +134,7 @@ XATA_API_KEY=your-xata-api-key
 - `XATA_DATABASE_URL` and `XATA_API_KEY` are mandatory in production. Accounts and shortlists are stored in Xata; local filesystem storage is development-only because Vercel instances are ephemeral.
 - `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, and `NEXT_PUBLIC_APP_URL` are required for production password-reset email. Verify the sender domain in Resend. Reset codes are never returned or logged in production.
 - `AUTH_SECRET` signs Auth.js JWT sessions. Use a long, random string in production.
+- Before deploying account features, set `XATA_DATABASE_URL`, `XATA_API_KEY`, and `AUTH_SECRET` in Vercel for the Production environment, apply `xata/schema.ts`, then check `/api/health/auth`. It returns only readiness and missing variable names, never secret values.
 - Never commit `.env.local` or expose server only keys in client code.
 
 ---

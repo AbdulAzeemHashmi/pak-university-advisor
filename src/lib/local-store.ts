@@ -3,7 +3,7 @@ import path from "path";
 import os from "os";
 import { randomInt, randomUUID } from "crypto";
 import bcrypt from "bcryptjs";
-import { getXataClient, hasXataPersistence } from "@/lib/xata";
+import { getAccountServiceStatus, getXataClient, hasXataPersistence } from "@/lib/xata";
 
 export type LocalUser = {
   id: string;
@@ -49,10 +49,21 @@ export class PersistenceUnavailableError extends Error {
   }
 }
 
+export class AccountServiceError extends Error {
+  constructor() {
+    super("The account database is unavailable.");
+  }
+}
+
 function requirePersistentStore() {
-  if (process.env.NODE_ENV === "production" && !hasXataPersistence()) {
+  if (process.env.NODE_ENV === "production" && !getAccountServiceStatus().ready) {
     throw new PersistenceUnavailableError();
   }
+}
+
+function asAccountServiceError(error: unknown): never {
+  console.error("Account database operation failed", error);
+  throw new AccountServiceError();
 }
 
 type RemoteRecord = {
@@ -123,18 +134,22 @@ export async function registerUser(name: string, email: string, password: string
 
   requirePersistentStore();
   if (hasXataPersistence()) {
-    const users = remoteTables().users;
-    if (await users.filter({ email: normalizedEmail }).getFirst()) {
-      return { error: "An account with this email already exists." };
+    try {
+      const users = remoteTables().users;
+      if (await users.filter({ email: normalizedEmail }).getFirst()) {
+        return { error: "An account with this email already exists." };
+      }
+      const user = await users.create({
+        email: normalizedEmail,
+        name: name.trim(),
+        password: await bcrypt.hash(password, 12),
+        preferences: {},
+        createdAt: new Date().toISOString()
+      });
+      return { user: toPublicUser(user) };
+    } catch (error) {
+      return asAccountServiceError(error);
     }
-    const user = await users.create({
-      email: normalizedEmail,
-      name: name.trim(),
-      password: await bcrypt.hash(password, 12),
-      preferences: {},
-      createdAt: new Date().toISOString()
-    });
-    return { user: toPublicUser(user) };
   }
 
   const store = await readStore();
@@ -160,9 +175,13 @@ export async function registerUser(name: string, email: string, password: string
 export async function authenticateUser(email: string, password: string) {
   const normalizedEmail = email.toLowerCase().trim();
   if (hasXataPersistence()) {
-    const user = await remoteTables().users.filter({ email: normalizedEmail }).getFirst();
-    if (!user || !(await bcrypt.compare(password, user.password))) return null;
-    return toPublicUser(user);
+    try {
+      const user = await remoteTables().users.filter({ email: normalizedEmail }).getFirst();
+      if (!user || !(await bcrypt.compare(password, user.password))) return null;
+      return toPublicUser(user);
+    } catch (error) {
+      return asAccountServiceError(error);
+    }
   }
   if (process.env.NODE_ENV === "production") return null;
   const store = await readStore();

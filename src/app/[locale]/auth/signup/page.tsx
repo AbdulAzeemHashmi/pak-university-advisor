@@ -39,9 +39,9 @@ export default function SignupPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password })
       });
-      const registerJson = await registerRes.json();
+      const registerJson = await registerRes.json().catch(() => ({}));
       if (!registerRes.ok) {
-        setError(registerJson.error || "Could not register account. Please try again.");
+        setError(registerJson.error || `Could not create the account (server returned ${registerRes.status}). Please try again later.`);
         return;
       }
 
@@ -56,8 +56,8 @@ export default function SignupPage() {
       } else {
         router.push("/");
       }
-    } catch (err) {
-      setError("An unexpected error occurred.");
+    } catch {
+      setError("The account service could not be reached. Please try again later.");
     } finally {
       setLoading(false);
     }
