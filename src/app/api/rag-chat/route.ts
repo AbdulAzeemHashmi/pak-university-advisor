@@ -180,7 +180,7 @@ CRITICAL FORMATTING INSTRUCTION:
 
       const uniLinesUr = targetList.map((u, i) =>
         `${i + 1}. ${u.name} (${u.city}) - شعبہ: ${u.type === "Public" ? "سرکاری" : "پرائیویٹ"}
-   اسکالرشپ: ${u.has_hec_scholarship ? "ایچ ای سی نیڈ بیسڈ اسکالرشپ (مکمل ٹیوشن فیس معافی اور وظیفہ)" : "مالیاتی امداد دفتر سے رابطہ کریں"}`
+   اسکالرشپ: ${u.has_hec_scholarship ? "مقامی ڈیٹاسیٹ میں ایچ ای سی نیڈ بیسڈ اسکالرشپ کا اندراج (شرائط اور کوریج کی تصدیق ضروری ہے)" : "مالیاتی امداد دفتر سے رابطہ کریں"}`
       ).join("\n\n");
 
       fallbackEnglish = `Scholarship Pathways & Financial Aid Guide\n\nQuery: "${message}"\n\nInstitutions with scholarship-related local records:\n\n${uniLinesEn}\n\nKey Application Guidelines:\n1. Confirm the current scholarship cycle and eligibility with the university Financial Aid Office.\n2. Ask the provider which financial documents are currently required.\n3. Use the official scholarship provider and university websites before applying.`;
