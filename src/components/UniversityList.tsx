@@ -69,7 +69,7 @@ export default function UniversityList({
 
         {/* List of Recommended Scholarship Universities */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {scholarshipOptions.slice(0, 12).map((uni) => (
+          {scholarshipOptions.map((uni) => (
             <div key={uni.id} className="bg-white rounded-2xl p-6 border border-emerald-800/20 shadow-md hover:shadow-lg transition-all space-y-4">
               <div className="flex items-start justify-between">
                 <div>
