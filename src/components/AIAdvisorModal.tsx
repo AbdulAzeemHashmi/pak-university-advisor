@@ -50,8 +50,7 @@ export default function AIAdvisorModal({
   isOpen,
   onClose,
   defaultCity = "Lahore",
-  defaultDegree = "Computer Science",
-  defaultBudget = 300000
+  defaultDegree = "Computer Science"
 }: AIAdvisorModalProps) {
   const t = useTranslations("aiModal");
 
@@ -60,7 +59,7 @@ export default function AIAdvisorModal({
     {
       id: "welcome-msg",
       role: "assistant",
-      content: `السلام علیکم! I am your Pak University RAG AI Counselor.\n\nAsk me any question in English, Urdu (اردو), or Roman Urdu about Pakistani universities, tuition fees, HEC/USAID scholarships, or degree programs.\n\nEvery recommendation is 100% grounded in our database of 260+ Pakistani universities.`,
+      content: `السلام علیکم! I am your Pak University RAG AI Counselor.\n\nAsk me any question in English, Urdu (اردو), or Roman Urdu about Pakistani universities, tuition fees, HEC/USAID scholarships, or degree programs.\n\nRecommendations are based on retrieved local records. Please confirm changing fees, admissions, and scholarship terms on official websites.`,
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
     }
   ]);
@@ -104,10 +103,7 @@ export default function AIAdvisorModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: userMsg.content,
-          history: historyPayload,
-          filters: {
-            maxFee: defaultBudget > 0 ? defaultBudget : undefined
-          }
+          history: historyPayload
         })
       });
 
@@ -270,7 +266,7 @@ export default function AIAdvisorModal({
                       <div className="flex items-center justify-between text-[11px] font-bold text-[#01411C]">
                         <span className="flex items-center gap-1.5">
                           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 fill-emerald-100" />
-                          Retrieved Database Verification ({msg.citedUniversities.length} Institutions)
+                          Retrieved database records ({msg.citedUniversities.length} institutions)
                         </span>
                       </div>
 
