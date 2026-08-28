@@ -153,7 +153,8 @@ CRITICAL FORMATTING INSTRUCTION:
               return NextResponse.json({
                 recommendation: cleanTextForHumanFormat(content),
                 citedUniversities,
-                contextCount: citedUniversities.length
+                contextCount: citedUniversities.length,
+                isScholarshipFallback
               });
             }
           } else {
@@ -223,7 +224,8 @@ CRITICAL FORMATTING INSTRUCTION:
     return NextResponse.json({
       recommendation: cleanTextForHumanFormat(combinedFallback),
       citedUniversities,
-      contextCount: citedUniversities.length
+      contextCount: citedUniversities.length,
+      isScholarshipFallback
     });
   } catch (error) {
     console.error("Error in /api/rag-chat:", error);
