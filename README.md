@@ -42,7 +42,7 @@ Choosing a university in Pakistan means digging through dozens of websites for f
 | AI Advisor | Get personalized bilingual recommendations powered by OpenRouter |
 | Side by Side Comparison | Compare universities on fees, programs, rankings, location, and aid |
 | English and Urdu | Full bilingual support with right to left Urdu layouts |
-| Smart Search | Recognizes acronyms like FAST, NUCES, NUST, LUMS, UET, COMSATS, GIKI, IBA, GCU, and more |
+| Smart Search | Recognizes acronyms like FAST, NUST, LUMS, UET, COMSATS, GIKI, IBA, GCU, and more |
 
 ---
 
@@ -172,7 +172,7 @@ pak-university-advisor/
 ## Data Workflow
 
 ```text
-1. Place or update source CSVs in the repository root or data/ folder
+1. Place or update source CSVs in the repository root or data/folder
 2. Run: python scripts/merge_datasets.py
 3. Review: data/processed/master_universities.json
 4. Start the app and verify search, budget filtering, and scholarship behavior
