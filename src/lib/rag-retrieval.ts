@@ -22,6 +22,7 @@ function tokenizeQuery(text: string): string[] {
   if (!text) return [];
   const cleaned = text
     .toLowerCase()
+    .replace(/[أإٱ]/g, "ا").replace(/ى/g, "ی").replace(/ك/g, "ک").replace(/ۀ/g, "ہ")
     .replace(/[^\w\s\u0600-\u06FF]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
@@ -36,6 +37,25 @@ function tokenizeQuery(text: string): string[] {
     }
   }
   return grams;
+}
+
+const QUERY_EXPANSIONS: Record<string, string[]> = {
+  "comp sci": ["computer", "science"],
+  cs: ["computer", "science"],
+  "software dev": ["software", "engineering"],
+  ai: ["artificial", "intelligence"],
+  cybersecurity: ["cyber", "security"],
+  sasti: ["low", "fee"],
+  sasta: ["low", "fee"],
+  kam: ["low", "fee"]
+};
+
+function expandQueryTokens(text: string, tokens: string[]): string[] {
+  const normalized = text.toLowerCase().replace(/[^\w\s]/g, " ").replace(/\s+/g, " ").trim();
+  const additions = Object.entries(QUERY_EXPANSIONS)
+    .filter(([phrase]) => new RegExp(`\\b${phrase.replace(/ /g, "\\s+")}\\b`, "i").test(normalized))
+    .flatMap(([, words]) => words);
+  return [...tokens, ...additions];
 }
 
 // Each alias entry maps an acronym to an ordered array of name substrings to search for,
@@ -70,23 +90,6 @@ const ALIAS_MAP: Record<string, string[]> = {
   ned: ["ned university of engineering"],
   ist: ["institute of space technology"],
 };
-
-// Preferred institution ordering for common queries (by canonical id in dataset)
-// These are used to sort results when all else is equal
-const PRESTIGE_IDS: string[] = [
-  "uni_138", // NUST
-  "uni_134", // FAST/NUCES Islamabad
-  "uni_111", // LUMS
-  "uni_32",  // COMSATS Islamabad
-  "uni_5",   // Air University
-  "uni_150", // PIEAS
-  "uni_163", // QAU
-  "uni_226", // UET Taxila
-  "uni_224", // UET Lahore (2)
-  "uni_223", // UET Peshawar
-  "uni_18",  // Bahria University
-  "uni_84",  // IIU
-];
 
 export type QueryIntentType = "GREETING" | "SCHOLARSHIP" | "COMPARISON" | "SEARCH" | "OUT_OF_DOMAIN";
 
@@ -179,6 +182,7 @@ export function detectQueryIntent(text: string): QueryIntent {
     "\\bse\\b": "software engineering",
     "\\bai\\b": "artificial intelligence",
     "\\bds\\b": "data science",
+    "\\bbds\\b": "bds",
     "\\bbba\\b": "business administration",
   };
   let detectedDegree = disciplines.find(d => q.includes(d));
@@ -242,6 +246,19 @@ export interface RAGRetrievalResult {
   noReliableMatch: boolean;
 }
 
+function matchesActiveConstraints(uni: University, intent: QueryIntent, filters: SearchFilters | undefined, maxFee: number | undefined): boolean {
+  const city = filters?.city && !["all", "All"].includes(filters.city) ? filters.city : intent.detectedCity;
+  if (city && uni.city.toLowerCase() !== city.toLowerCase()) return false;
+  if (filters?.province && !["all", "All"].includes(filters.province) && uni.province.toLowerCase() !== filters.province.toLowerCase()) return false;
+  if (filters?.type && filters.type !== "all" && uni.type !== filters.type) return false;
+  if (maxFee && uni.fee_range_max > maxFee) return false;
+  if (filters?.distanceEducation && !uni.distance_education) return false;
+  const degree = filters?.degree && !["all", "All"].includes(filters.degree) ? filters.degree : intent.detectedDegree;
+  if (degree && !uni.programs.some(program => program.toLowerCase().includes(degree.toLowerCase()))) return false;
+  if (filters?.category && !["all", "All"].includes(filters.category) && !uni.category.toLowerCase().includes(filters.category.toLowerCase())) return false;
+  return true;
+}
+
 export async function searchUniversitiesRAG(
   query: string,
   filters?: SearchFilters,
@@ -269,16 +286,6 @@ export async function searchUniversitiesRAG(
   if (intent.type === "COMPARISON" && intent.detectedUniversities && intent.detectedUniversities.length > 0) {
     const pinned = resolvePinnedUniversities(intent.detectedUniversities, allUniversities);
 
-    // Sort pinned by prestige/quality (PRESTIGE_IDS ordering)
-    pinned.sort((a, b) => {
-      const ai = PRESTIGE_IDS.indexOf(a.id);
-      const bi = PRESTIGE_IDS.indexOf(b.id);
-      if (ai === -1 && bi === -1) return 0;
-      if (ai === -1) return 1;
-      if (bi === -1) return -1;
-      return ai - bi;
-    });
-
     const topK6 = pinned.slice(0, 6);
     const contextLines = topK6.map((u, idx) => buildContextLine(u, idx));
     const contextSummary = contextLines.join("\n\n");
@@ -292,7 +299,7 @@ export async function searchUniversitiesRAG(
     };
   }
 
-  const tokens = tokenizeQuery(query);
+  const tokens = expandQueryTokens(query, tokenizeQuery(query));
 
   // Compute Query Vector using Corpus IDF
   const queryTf: Record<string, number> = {};
@@ -319,8 +326,6 @@ export async function searchUniversitiesRAG(
   const effectiveMaxFee = [filters?.maxFee, intent.maxFee]
     .filter((value): value is number => typeof value === "number" && Number.isFinite(value) && value > 0)
     .reduce<number | undefined>((minimum, value) => minimum === undefined ? value : Math.min(minimum, value), undefined);
-  const isTopQuery = queryLower.includes("top") || queryLower.includes("best") || queryLower.includes("ranked") || queryLower.includes("famous") || queryLower.includes("بہترین");
-
   // Pinned universities from explicit alias mentions (for SEARCH queries that name specific universities)
   const pinnedFromAliases = intent.detectedUniversities && intent.detectedUniversities.length > 0
     ? resolvePinnedUniversities(intent.detectedUniversities, allUniversities)
@@ -332,25 +337,7 @@ export async function searchUniversitiesRAG(
     const uni = uniMap.get(doc.id);
     if (!uni) return { id: doc.id, score: -1 };
 
-    const effectiveCity = filters?.city && filters.city !== "all" && filters.city !== "All"
-      ? filters.city
-      : intent.detectedCity;
-
-    if (effectiveCity && uni.city.toLowerCase() !== effectiveCity.toLowerCase()) {
-      return { id: doc.id, score: -1 };
-    }
-
-    if (filters?.province && filters.province !== "all" && filters.province !== "All") {
-      if (uni.province.toLowerCase() !== filters.province.toLowerCase()) {
-        return { id: doc.id, score: -1 };
-      }
-    }
-
-    if (filters?.type && filters.type !== "all") {
-      if (uni.type.toLowerCase() !== filters.type.toLowerCase()) {
-        return { id: doc.id, score: -1 };
-      }
-    }
+    if (!matchesActiveConstraints(uni, intent, filters, effectiveMaxFee)) return { id: doc.id, score: -1 };
 
     // Cosine Vector Similarity
     let dotProduct = 0;
@@ -370,14 +357,6 @@ export async function searchUniversitiesRAG(
       boost += 0.6;
     }
 
-    // Top/Best query: boost known prestige institutions
-    if (isTopQuery) {
-      const prestigeRank = PRESTIGE_IDS.indexOf(uni.id);
-      if (prestigeRank !== -1) {
-        boost += (PRESTIGE_IDS.length - prestigeRank) * 0.2;
-      }
-    }
-
     // Sector boost
     if (isPublicQuery && uni.type === "Public") boost += 0.4;
     if (isPrivateQuery && uni.type === "Private") boost += 0.4;
@@ -391,19 +370,6 @@ export async function searchUniversitiesRAG(
     if (isLowFeeQuery && uni.fee_range_max <= 150000) {
       boost += 0.6;
     }
-
-    // A budget is a hard constraint, not a weak ranking preference.
-    if (effectiveMaxFee && uni.fee_range_max > effectiveMaxFee) {
-        return { id: doc.id, score: -1 };
-    }
-
-    if (filters?.degree && filters.degree !== "all" && filters.degree !== "All" && !uni.programs.some(program => program.toLowerCase().includes(filters.degree!.toLowerCase()))) {
-      return { id: doc.id, score: -1 };
-    }
-    if (filters?.category && filters.category !== "all" && filters.category !== "All" && !uni.category.toLowerCase().includes(filters.category.toLowerCase())) {
-      return { id: doc.id, score: -1 };
-    }
-    if (filters?.distanceEducation && !uni.distance_education) return { id: doc.id, score: -1 };
 
     // Pinned universities from explicit aliases still honour explicit constraints.
     if (pinnedIds.has(doc.id)) return { id: doc.id, score: 99 };
@@ -437,7 +403,7 @@ export async function searchUniversitiesRAG(
     if (isScholarshipQuery) {
       for (const u of allUniversities) {
         if (topUnis.length >= topK) break;
-        if ((u.has_hec_scholarship || u.has_usaid_scholarship) && !seenIds.has(u.id) && (!effectiveMaxFee || u.fee_range_max <= effectiveMaxFee)) {
+        if ((u.has_hec_scholarship || u.has_usaid_scholarship) && !seenIds.has(u.id) && matchesActiveConstraints(u, intent, filters, effectiveMaxFee)) {
           topUnis.push(u);
           seenIds.add(u.id);
         }
@@ -447,15 +413,8 @@ export async function searchUniversitiesRAG(
     // City backfill - prefer prestige institutions
     if (intent.detectedCity) {
       const cityUnis = allUniversities
-        .filter(u => u.city.toLowerCase() === intent.detectedCity!.toLowerCase() && !seenIds.has(u.id) && (!effectiveMaxFee || u.fee_range_max <= effectiveMaxFee))
-        .sort((a, b) => {
-          const ai = PRESTIGE_IDS.indexOf(a.id);
-          const bi = PRESTIGE_IDS.indexOf(b.id);
-          if (ai === -1 && bi === -1) return a.fee_range_max - b.fee_range_max;
-          if (ai === -1) return 1;
-          if (bi === -1) return -1;
-          return ai - bi;
-        });
+        .filter(u => !seenIds.has(u.id) && matchesActiveConstraints(u, intent, filters, effectiveMaxFee))
+        .sort((a, b) => a.fee_range_max - b.fee_range_max || a.name.localeCompare(b.name));
 
       for (const u of cityUnis) {
         if (topUnis.length >= topK) break;
@@ -468,7 +427,7 @@ export async function searchUniversitiesRAG(
     if (isLowFeeQuery) {
       for (const u of allUniversities) {
         if (topUnis.length >= topK) break;
-        if (u.type === "Public" && u.fee_range_max <= 100000 && !seenIds.has(u.id) && (!effectiveMaxFee || u.fee_range_max <= effectiveMaxFee)) {
+        if (u.type === "Public" && u.fee_range_max <= 100000 && !seenIds.has(u.id) && matchesActiveConstraints(u, intent, filters, effectiveMaxFee)) {
           topUnis.push(u);
           seenIds.add(u.id);
         }
@@ -505,6 +464,7 @@ function buildContextLine(u: University, idx: number): string {
 - Location: ${u.city}, ${u.province}
 - Sector: ${u.type} Sector | Category: ${u.category} | Chartered by: ${u.chartered_by || "Government"}
 - Annual Fee Max: PKR ${u.fee_range_max.toLocaleString()} / year
+- Data reliability: Fee, program, and contact fields may be estimated or inferred in this local dataset; do not present them as current official facts.
 - Scholarships: ${scholarshipText || "Institutional Aid via Financial Aid Office"}
 - Financial Aid Office / Details: ${u.financial_aid_office || "Contact Admissions Office"} - ${u.scholarship_details || ""}
 - Programs Offered: ${u.programs.join(", ")}

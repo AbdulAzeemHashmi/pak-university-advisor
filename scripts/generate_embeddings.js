@@ -7,6 +7,12 @@ const outputPath = path.join(__dirname, '../data/processed/university_embeddings
 
 const universities = JSON.parse(fs.readFileSync(masterPath, 'utf8'));
 
+function usableScholarshipText(value) {
+  const text = String(value || '').trim();
+  if (!text || /availability and coverage must be verified/i.test(text)) return '';
+  return text;
+}
+
 // Tokenize text into lowercased n-grams and terms
 function tokenize(text) {
   if (!text) return [];
@@ -47,8 +53,7 @@ universities.forEach(uni => {
     uni.has_hec_scholarship ? 'hec_scholarship hec_need_based free_education full_tuition' : '',
     uni.has_usaid_scholarship ? 'usaid_scholarship mnesdays mnbsp' : '',
     (uni.scholarship_programs || []).join(' '),
-    uni.scholarship_details || '',
-    uni.financial_aid_office || '',
+    usableScholarshipText(uni.scholarship_details),
     (uni.programs || []).map(p => `program_${p.toLowerCase().replace(/\s+/g, '_')} ${p}`).join(' '),
     uni.campuses || ''
   ].join(' ');
