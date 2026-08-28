@@ -112,6 +112,11 @@ function extractMaxFee(text: string): number | undefined {
   const lakhMatch = q.match(/(?:under|below|less than|upto|up to|within|budget|fee)[^\d]{0,20}(\d+(?:\.\d+)?)\s*(?:lakh|lac)/i);
   if (lakhMatch) return Math.round(Number(lakhMatch[1]) * 100_000);
 
+  // Common Pakistani shorthand, e.g. "best universities in 30k range annually".
+  const thousandMatch = q.match(/(?:under|below|less than|upto|up to|within|budget|fee|range)[^\d]{0,20}(\d+(?:\.\d+)?)\s*k\b/i)
+    || q.match(/\b(\d+(?:\.\d+)?)\s*k\s*(?:range|annual(?:ly)?|per\s*year|yearly|fee|budget)\b/i);
+  if (thousandMatch) return Math.round(Number(thousandMatch[1]) * 1_000);
+
   const pkrMatch = q.match(/(?:under|below|less than|upto|up to|within|budget|fee)[^\d]{0,20}(\d{4,7})\s*(?:pkr|rs\.?|rupees)?/i);
   if (pkrMatch) return Number(pkrMatch[1]);
   return undefined;
@@ -244,6 +249,7 @@ export interface RAGRetrievalResult {
   citedIds: string[];
   intent: QueryIntent;
   noReliableMatch: boolean;
+  isScholarshipFallback: boolean;
 }
 
 function matchesActiveConstraints(uni: University, intent: QueryIntent, filters: SearchFilters | undefined, maxFee: number | undefined): boolean {
@@ -278,7 +284,8 @@ export async function searchUniversitiesRAG(
       contextSummary: "Student has initiated a greeting. Provide a warm, encouraging welcome in English and Urdu, explain what guidance you can provide (fees, admissions, scholarships, comparisons), and suggest 3 sample questions.",
       citedIds: [],
       intent,
-      noReliableMatch: false
+      noReliableMatch: false,
+      isScholarshipFallback: false
     };
   }
 
@@ -299,7 +306,8 @@ export async function searchUniversitiesRAG(
       contextSummary,
       citedIds: topK6.map(u => u.id),
       intent,
-      noReliableMatch: topK6.length === 0
+      noReliableMatch: topK6.length === 0,
+      isScholarshipFallback: false
     };
   }
 
@@ -439,11 +447,29 @@ export async function searchUniversitiesRAG(
     }
   }
 
+  // Direct retrieval respects the fee cap. If it finds nothing, retry only with
+  // explicitly flagged need-based scholarship providers, preserving every other
+  // active constraint (city, programme, sector, category and study mode).
+  const isScholarshipFallback = topUnis.length === 0 && effectiveMaxFee !== undefined;
+  if (isScholarshipFallback) {
+    const scholarshipOptions = allUniversities
+      .filter(u => (u.has_hec_scholarship || u.has_usaid_scholarship)
+        && matchesActiveConstraints(u, intent, filters, undefined))
+      .sort((a, b) => a.fee_range_max - b.fee_range_max || a.name.localeCompare(b.name));
+
+    for (const university of scholarshipOptions.slice(0, topK)) {
+      topUnis.push(university);
+      seenIds.add(university.id);
+    }
+  }
+
   const noReliableMatch = topUnis.length === 0;
   const contextLines = topUnis.map((u, idx) => buildContextLine(u, idx));
   const contextSummary = noReliableMatch
     ? "NO RETRIEVED RECORDS. Do not name, rank, or make claims about a university. Ask the student for a city, program, sector, or exact institution name."
-    : contextLines.join("\n\n");
+    : `${isScholarshipFallback
+      ? "BUDGET FALLBACK: No university matched the student's fee cap. The following records are need-based scholarship opportunities, not guaranteed admission or funding. Explain that eligibility, award coverage, and deadlines must be verified with the financial-aid office.\n\n"
+      : ""}${contextLines.join("\n\n")}`;
   const citedIds = topUnis.map(u => u.id);
 
   return {
@@ -451,7 +477,8 @@ export async function searchUniversitiesRAG(
     contextSummary,
     citedIds,
     intent,
-    noReliableMatch
+    noReliableMatch,
+    isScholarshipFallback
   };
 }
 
