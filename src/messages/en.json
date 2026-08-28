@@ -86,7 +86,7 @@
   },
   "fallback": {
     "title": "No Universities Fit Your Budget of PKR {maxFee}",
-    "subtitle": "Don't worry! Here are recognized institutions in this region offering full HEC Need-Based & USAID scholarships to cover 100% of your tuition fees:",
+    "subtitle": "No university matches your annual fee budget. These recognised institutions meet your other filters and are flagged in our dataset as offering HEC Need-Based or USAID MNBSP support. Confirm current eligibility and coverage directly with the university:",
     "financialAidContact": "Financial Aid Contact",
     "details": "Scholarship Details"
   },

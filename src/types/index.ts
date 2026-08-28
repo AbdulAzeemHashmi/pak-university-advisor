@@ -65,4 +65,6 @@ export interface PaginatedResult<T> {
     totalPages: number;
   };
   scholarshipOptions?: T[];
+  /** True only when the fee cap produced no direct matches and aid options are shown instead. */
+  isScholarshipFallback?: boolean;
 }

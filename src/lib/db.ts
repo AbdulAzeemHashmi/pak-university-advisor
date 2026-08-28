@@ -76,6 +76,14 @@ const ALIAS_GROUPS: AliasGroup[] = [
   }
 ];
 
+/**
+ * The dataset flags HEC Need-Based and USAID MNBSP partners explicitly. Do not
+ * treat a generic financial-aid office as proof that a need-based award exists.
+ */
+export function offersNeedBasedScholarship(university: University): boolean {
+  return university.has_hec_scholarship || university.has_usaid_scholarship;
+}
+
 export async function fetchUniversities(filters: SearchFilters): Promise<PaginatedResult<University>> {
   const allUniversities = getLocalMasterUniversities();
   
@@ -152,7 +160,8 @@ export async function fetchUniversities(filters: SearchFilters): Promise<Paginat
   }
 
   // Max Fee filter
-  let scholarshipOptions: University[] | undefined = undefined;
+  let scholarshipOptions: University[] | undefined;
+  let isScholarshipFallback = false;
 
   if (filters.maxFee !== undefined && filters.maxFee > 0) {
     const max = filters.maxFee;
@@ -161,8 +170,11 @@ export async function fetchUniversities(filters: SearchFilters): Promise<Paginat
     // Smart Fallback Logic:
     // If no university fits the student's max_fee, automatically display universities in that region that offer need-based scholarships
     if (feeFiltered.length === 0) {
-      scholarshipOptions = filtered.filter(u => u.has_hec_scholarship || u.has_usaid_scholarship);
+      scholarshipOptions = filtered
+        .filter(offersNeedBasedScholarship)
+        .sort((a, b) => a.fee_range_max - b.fee_range_max || a.name.localeCompare(b.name));
       filtered = [];
+      isScholarshipFallback = scholarshipOptions.length > 0;
     } else {
       filtered = feeFiltered;
     }
@@ -181,14 +193,15 @@ export async function fetchUniversities(filters: SearchFilters): Promise<Paginat
       total,
       totalPages
     },
-    scholarshipOptions
+    scholarshipOptions,
+    isScholarshipFallback
   };
 }
 
 export async function fetchScholarshipUniversities(city?: string, degree?: string): Promise<University[]> {
   const all = getLocalMasterUniversities();
   return all.filter(u => {
-    const matchScholarship = u.has_hec_scholarship || u.has_usaid_scholarship;
+    const matchScholarship = offersNeedBasedScholarship(u);
     const matchCity = !city || city === "all" || u.city.toLowerCase() === city.toLowerCase();
     const matchDegree = !degree || degree === "all" || (u.programs && u.programs.some(p => p.toLowerCase().includes(degree.toLowerCase())));
     return matchScholarship && matchCity && matchDegree;

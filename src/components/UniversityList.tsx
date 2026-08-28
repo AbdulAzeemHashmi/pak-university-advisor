@@ -39,10 +39,10 @@ export default function UniversityList({
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selectedUni, setSelectedUni] = useState<University | null>(null);
 
-  const { results, pagination, scholarshipOptions } = data;
+  const { results, pagination, scholarshipOptions, isScholarshipFallback } = data;
 
   // Case 1: Smart Fallback Logic (No universities fit budget)
-  if (results.length === 0 && scholarshipOptions && scholarshipOptions.length > 0) {
+  if (isScholarshipFallback && results.length === 0 && scholarshipOptions && scholarshipOptions.length > 0) {
     return (
       <div className="space-y-6">
         {/* Banner Alert */}
@@ -61,12 +61,15 @@ export default function UniversityList({
             <p className="text-sm text-emerald-100/90 max-w-3xl leading-relaxed">
               {fallbackT("subtitle")}
             </p>
+            <p className="text-xs text-amber-100/90 max-w-3xl leading-relaxed">
+              Scholarship availability is not an admission or funding guarantee. Confirm eligibility, deadlines, and award coverage with each university&apos;s financial-aid office.
+            </p>
           </div>
         </div>
 
         {/* List of Recommended Scholarship Universities */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {scholarshipOptions.map((uni) => (
+          {scholarshipOptions.slice(0, 12).map((uni) => (
             <div key={uni.id} className="bg-white rounded-2xl p-6 border border-emerald-800/20 shadow-md hover:shadow-lg transition-all space-y-4">
               <div className="flex items-start justify-between">
                 <div>
