@@ -1,6 +1,5 @@
 import { University, SearchFilters, PaginatedResult } from "@/types";
 import { getLocalMasterUniversities } from "@/lib/xata";
-import { getStoredShortlist, updateStoredShortlist } from "@/lib/local-store";
 
 interface AliasGroup {
   aliases: string[];
@@ -194,22 +193,6 @@ export async function fetchScholarshipUniversities(city?: string, degree?: strin
     const matchDegree = !degree || degree === "all" || (u.programs && u.programs.some(p => p.toLowerCase().includes(degree.toLowerCase())));
     return matchScholarship && matchCity && matchDegree;
   });
-}
-
-export async function getShortlist(userId: string): Promise<University[]> {
-  const all = getLocalMasterUniversities();
-  const uniIds = await getStoredShortlist(userId);
-  return all.filter(u => uniIds.includes(u.id));
-}
-
-export async function addToShortlist(userId: string, universityId: string): Promise<boolean> {
-  await updateStoredShortlist(userId, universityId, true);
-  return true;
-}
-
-export async function removeFromShortlist(userId: string, universityId: string): Promise<boolean> {
-  await updateStoredShortlist(userId, universityId, false);
-  return true;
 }
 
 export async function getAllUniqueCities(): Promise<string[]> {

@@ -1,6 +1,4 @@
 import { setRequestLocale } from 'next-intl/server';
-import { redirect } from 'next/navigation';
-import { auth } from '@/lib/auth';
 import { getAllUniqueCities, getAllUniquePrograms, getAllUniqueCategories } from '@/lib/db';
 import UniversitiesSearchClient from '@/components/UniversitiesSearchClient';
 
@@ -15,11 +13,6 @@ export default async function UniversitiesPage({
   const sParams = searchParams ? await searchParams : {};
 
   setRequestLocale(locale);
-
-  const session = await auth();
-  if (!session?.user) {
-    redirect(`/${locale}/auth/login`);
-  }
 
   const cities = await getAllUniqueCities();
   const programs = await getAllUniquePrograms();

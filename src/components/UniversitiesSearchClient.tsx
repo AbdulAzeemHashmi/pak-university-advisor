@@ -25,7 +25,6 @@ export default function UniversitiesSearchClient({
   const [data, setData] = useState<PaginatedResult<University> | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const [shortlistedIds, setShortlistedIds] = useState<string[]>([]);
   const [comparedUnis, setComparedUnis] = useState<University[]>([]);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
 
@@ -59,28 +58,8 @@ export default function UniversitiesSearchClient({
     fetchResults();
   }, [filters]);
 
-  useEffect(() => {
-    fetch("/api/shortlist")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((json) => setShortlistedIds(json?.shortlist?.map((university: University) => university.id) || []))
-      .catch(() => setShortlistedIds([]));
-  }, []);
-
   const handleFilterChange = (newFilters: SearchFilters) => {
     setFilters((prev) => ({ ...prev, ...newFilters }));
-  };
-
-  const handleToggleShortlist = async (id: string) => {
-    const removing = shortlistedIds.includes(id);
-    setShortlistedIds(removing ? shortlistedIds.filter((item) => item !== id) : [...shortlistedIds, id]);
-    const response = await fetch("/api/shortlist", {
-        method: removing ? "DELETE" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ universityId: id })
-      });
-    if (!response.ok) {
-      setShortlistedIds((current) => removing ? [...current, id] : current.filter((item) => item !== id));
-    }
   };
 
   const handleToggleCompare = (university: University) => {
@@ -131,10 +110,8 @@ export default function UniversitiesSearchClient({
       ) : data ? (
         <UniversityList
           data={data}
-          shortlistedIds={shortlistedIds}
           comparedIds={comparedUnis.map((u) => u.id)}
           onPageChange={(page) => handleFilterChange({ page })}
-          onToggleShortlist={handleToggleShortlist}
           onToggleCompare={handleToggleCompare}
           maxFeeFilter={filters.maxFee}
         />

@@ -11,7 +11,6 @@ import {
   Calendar, 
   Trophy, 
   ExternalLink, 
-  Heart, 
   CheckSquare, 
   Square,
   Building2,
@@ -21,31 +20,19 @@ import {
 
 interface UniversityCardProps {
   university: University;
-  isShortlisted?: boolean;
   isCompared?: boolean;
-  onToggleShortlist?: (id: string) => void;
   onToggleCompare?: (university: University) => void;
   onViewDetails?: (university: University) => void;
 }
 
 export default function UniversityCard({
   university,
-  isShortlisted = false,
   isCompared = false,
-  onToggleShortlist,
   onToggleCompare,
   onViewDetails
 }: UniversityCardProps) {
   const t = useTranslations("card");
-  const [shortlisted, setShortlisted] = useState(isShortlisted);
   const [compared, setCompared] = useState(isCompared);
-
-  const handleShortlistClick = () => {
-    setShortlisted(!shortlisted);
-    if (onToggleShortlist) {
-      onToggleShortlist(university.id);
-    }
-  };
 
   const handleCompareClick = () => {
     setCompared(!compared);
@@ -71,22 +58,6 @@ export default function UniversityCard({
             </Badge>
           )}
         </div>
-
-        {/* Shortlist Heart Button */}
-        <button
-          onClick={handleShortlistClick}
-          className={`
-            absolute top-3 left-3 z-10 w-9 h-9 rounded-full flex items-center justify-center
-            transition-all duration-200 shadow-md backdrop-blur-md
-            ${shortlisted 
-              ? "bg-red-500 text-white scale-110" 
-              : "bg-white/80 text-slate-600 hover:bg-white hover:text-red-500"
-            }
-          `}
-          title={t("saveShortlist")}
-        >
-          <Heart className={`w-5 h-5 ${shortlisted ? "fill-current" : ""}`} />
-        </button>
 
         {/* University Name Header */}
         <div className="relative z-10 text-white w-full">

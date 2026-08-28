@@ -19,23 +19,5 @@ export const tables = [
       { name: "scholarship_details", type: "text" },
       { name: "programs", type: "multiple" }
     ]
-  },
-  {
-    name: "users",
-    columns: [
-      { name: "email", type: "email", unique: true },
-      { name: "password", type: "string" },
-      { name: "name", type: "string" },
-      { name: "preferences", type: "json" },
-      { name: "createdAt", type: "datetime" }
-    ]
-  },
-  {
-    name: "shortlists",
-    columns: [
-      { name: "userId", type: "string" },
-      { name: "universityId", type: "string" },
-      { name: "addedAt", type: "datetime" }
-    ]
   }
 ];

@@ -21,20 +21,16 @@ import {
 
 interface UniversityListProps {
   data: PaginatedResult<University>;
-  shortlistedIds?: string[];
   comparedIds?: string[];
   onPageChange: (page: number) => void;
-  onToggleShortlist?: (id: string) => void;
   onToggleCompare?: (university: University) => void;
   maxFeeFilter?: number;
 }
 
 export default function UniversityList({
   data,
-  shortlistedIds = [],
   comparedIds = [],
   onPageChange,
-  onToggleShortlist,
   onToggleCompare,
   maxFeeFilter
 }: UniversityListProps) {
@@ -157,9 +153,7 @@ export default function UniversityList({
           <UniversityCard
             key={uni.id}
             university={uni}
-            isShortlisted={shortlistedIds.includes(uni.id)}
             isCompared={comparedIds.includes(uni.id)}
-            onToggleShortlist={onToggleShortlist}
             onToggleCompare={onToggleCompare}
             onViewDetails={(u) => setSelectedUni(u)}
           />

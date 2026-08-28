@@ -2,9 +2,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
-import SidePanel from '@/components/SidePanel';
-import SessionProviderWrapper from '@/components/SessionProviderWrapper';
-import AuthGuard from '@/components/AuthGuard';
+import TopNavigation from '@/components/TopNavigation';
 import RAGChatWidget from '@/components/RAGChatWidget';
 import '../globals.css';
 
@@ -32,17 +30,13 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} dir={dir}>
       <body className="min-h-screen bg-[#F8F9FA] text-[#1A1A1A] antialiased">
-        <SessionProviderWrapper>
-          <NextIntlClientProvider messages={messages}>
-            <div className="flex flex-col lg:flex-row min-h-screen">
-              <SidePanel />
-              <main className="flex-1 p-4 sm:p-6 lg:p-10 max-w-7xl mx-auto w-full">
-                <AuthGuard>{children}</AuthGuard>
-              </main>
-            </div>
-            <RAGChatWidget />
-          </NextIntlClientProvider>
-        </SessionProviderWrapper>
+        <NextIntlClientProvider messages={messages}>
+          <div className="min-h-screen">
+            <TopNavigation />
+            <main className="mx-auto w-full max-w-7xl p-4 sm:p-6 lg:p-10">{children}</main>
+          </div>
+          <RAGChatWidget />
+        </NextIntlClientProvider>
       </body>
     </html>
   );
