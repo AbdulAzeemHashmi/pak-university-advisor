@@ -25,6 +25,10 @@ export default function SignupPage() {
       setError("Passwords do not match.");
       return;
     }
+    if (password.length < 12 || !/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/\d/.test(password)) {
+      setError("Password must have at least 12 characters, including uppercase, lowercase, and a number.");
+      return;
+    }
 
     setLoading(true);
     setError(null);

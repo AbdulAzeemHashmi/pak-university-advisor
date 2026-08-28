@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PersistenceUnavailableError, registerUser } from "@/lib/local-store";
+import { hasStrongPassword, PASSWORD_MIN_LENGTH, PersistenceUnavailableError, registerUser } from "@/lib/local-store";
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
@@ -7,8 +7,8 @@ export async function POST(request: NextRequest) {
   const email = typeof body?.email === "string" ? body.email.trim() : "";
   const password = typeof body?.password === "string" ? body.password : "";
 
-  if (name.length < 2 || !/^\S+@\S+\.\S+$/.test(email) || password.length < 8) {
-    return NextResponse.json({ error: "Enter a valid name, email, and password of at least 8 characters." }, { status: 422 });
+  if (name.length < 2 || !/^\S+@\S+\.\S+$/.test(email) || !hasStrongPassword(password)) {
+    return NextResponse.json({ error: `Enter a valid name, email, and password with at least ${PASSWORD_MIN_LENGTH} characters, including uppercase, lowercase, and a number.` }, { status: 422 });
   }
 
   try {

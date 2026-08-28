@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PersistenceUnavailableError, resetPassword } from "@/lib/local-store";
+import { hasStrongPassword, PASSWORD_MIN_LENGTH, PersistenceUnavailableError, resetPassword } from "@/lib/local-store";
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,8 +9,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Email, code, and password are required" }, { status: 400 });
     }
 
-    if (typeof password !== "string" || password.length < 8) {
-      return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 422 });
+    if (typeof password !== "string" || !hasStrongPassword(password)) {
+      return NextResponse.json({ error: `Password must have at least ${PASSWORD_MIN_LENGTH} characters, including uppercase, lowercase, and a number.` }, { status: 422 });
     }
 
     const normalizedEmail = email.toLowerCase().trim();

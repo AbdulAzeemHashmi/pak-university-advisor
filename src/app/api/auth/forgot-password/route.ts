@@ -3,6 +3,10 @@ import { PersistenceUnavailableError, createResetToken } from "@/lib/local-store
 
 const requestCounts = new Map<string, { count: number; resetAt: number }>();
 
+function escapeHtml(value: string) {
+  return value.replace(/[&<>'"]/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character]!);
+}
+
 function canRequestReset(ip: string) {
   const now = Date.now();
   const current = requestCounts.get(ip);
@@ -32,7 +36,7 @@ export async function POST(req: NextRequest) {
     const otp = await createResetToken(normalizedEmail);
 
     // Return the same response for registered and unregistered addresses.
-    if (!otp) return NextResponse.json({ success: true, emailSent: false });
+    if (!otp) return NextResponse.json({ success: true });
 
     // Attempt to send real email via Resend if configured
     const resendApiKey = process.env.RESEND_API_KEY;
@@ -40,8 +44,6 @@ export async function POST(req: NextRequest) {
     
     // An environment-owned URL prevents Host-header injection in password-reset links.
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV !== "production" ? "http://localhost:3000" : "");
-
-    let emailSent = false;
 
     if (resendApiKey && resendApiKey !== "re_placeholder" && fromEmail && appUrl) {
       try {
@@ -62,7 +64,7 @@ export async function POST(req: NextRequest) {
               <div style="font-family:sans-serif;max-width:500px;margin:auto;padding:32px;background:#f8fafc;border-radius:16px;border:1px solid #e2e8f0;">
                 <h2 style="color:#01411C;font-size:20px;margin-bottom:16px;">Password Reset Request</h2>
                 <p style="color:#475569;font-size:14px;line-height:1.5;">
-                  We received a request to reset your password for <strong>${normalizedEmail}</strong>.
+                  We received a request to reset your password for <strong>${escapeHtml(normalizedEmail)}</strong>.
                 </p>
                 <p style="font-size:14px;color:#475569;">Use the 6-digit code below on the password reset page:</p>
                 <div style="text-align:center;margin:24px 0;">
@@ -78,11 +80,9 @@ export async function POST(req: NextRequest) {
         });
 
         if (resendRes.ok) {
-          emailSent = true;
-          return NextResponse.json({ success: true, emailSent: true });
+          return NextResponse.json({ success: true });
         } else {
-          const resendErr = await resendRes.text();
-          console.warn("Resend email API response error:", resendErr);
+          console.warn("Resend email API response error:", resendRes.status);
         }
       } catch (emailErr) {
         console.error("Resend email exception:", emailErr);
@@ -96,7 +96,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      emailSent,
       ...(isDevMode ? { devCode: otp } : {})
     });
   } catch (err) {
@@ -106,19 +105,4 @@ export async function POST(req: NextRequest) {
     console.error("Forgot password error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
-}
-
-// Verify OTP endpoint used by reset-password page
-export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const email = searchParams.get("email")?.toLowerCase().trim();
-  const code = searchParams.get("code");
-
-  if (!email || !code) {
-    return NextResponse.json({ valid: false, error: "Email and code are required" }, { status: 400 });
-  }
-
-  const { verifyResetToken } = await import("@/lib/local-store");
-  const valid = await verifyResetToken(email, code);
-  return NextResponse.json({ valid, ...(valid ? {} : { error: "Invalid or expired reset code" }) }, { status: valid ? 200 : 401 });
 }

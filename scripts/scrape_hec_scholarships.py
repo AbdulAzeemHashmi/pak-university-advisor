@@ -32,6 +32,9 @@ def scrape_hec_scholarship_universities():
     except Exception as e:
         print(f"HEC Portal request notice ({e}). Using processed dataset verification fallback...")
 
+    if not page_html:
+        raise RuntimeError("HEC source could not be retrieved; existing scholarship data was left unchanged.")
+
     if os.path.exists(master_json):
         with open(master_json, 'r', encoding='utf-8') as f:
             unis = json.load(f)
@@ -48,10 +51,15 @@ def scrape_hec_scholarship_universities():
                         "source_url": url
                     })
 
-    with open(out_csv, 'w', newline='', encoding='utf-8') as f:
+    if not hec_list:
+        raise RuntimeError("HEC source contained no matchable university records; refusing to overwrite the existing list.")
+
+    temp_csv = out_csv + ".tmp"
+    with open(temp_csv, 'w', newline='', encoding='utf-8') as f:
         writer = csv.DictWriter(f, fieldnames=["university_name", "city", "type", "scholarship_name", "coverage", "contact", "source_url"])
         writer.writeheader()
         writer.writerows(hec_list)
+    os.replace(temp_csv, out_csv)
 
     print(f"Saved {len(hec_list)} HEC scholarship universities to {out_csv}")
     return hec_list

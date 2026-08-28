@@ -18,7 +18,15 @@ export type ResetToken = {
   email: string;
   codeHash: string;
   expiresAt: number;
+  attempts: number;
 };
+
+export const PASSWORD_MIN_LENGTH = 12;
+const RESET_MAX_ATTEMPTS = 5;
+
+export function hasStrongPassword(password: string): boolean {
+  return password.length >= PASSWORD_MIN_LENGTH && /[a-z]/.test(password) && /[A-Z]/.test(password) && /\d/.test(password);
+}
 
 export type LocalStore = {
   users: LocalUser[];
@@ -172,7 +180,12 @@ export async function createResetToken(email: string, customCode?: string): Prom
     const users = remoteTables().users;
     const user = await users.filter({ email: normalizedEmail }).getFirst();
     if (!user) return "";
-    const preferences = { ...(user.preferences || {}), resetCodeHash: await bcrypt.hash(otpCode, 10), resetExpiresAt: Date.now() + 15 * 60 * 1000 };
+    const preferences = {
+      ...(user.preferences || {}),
+      resetCodeHash: await bcrypt.hash(otpCode, 10),
+      resetExpiresAt: Date.now() + 15 * 60 * 1000,
+      resetAttempts: 0
+    };
     await users.update(user.id, { preferences });
     return otpCode;
   }
@@ -183,7 +196,8 @@ export async function createResetToken(email: string, customCode?: string): Prom
   store.resetTokens.push({
     email: normalizedEmail,
     codeHash: await bcrypt.hash(otpCode, 10),
-    expiresAt: Date.now() + 15 * 60 * 1000
+    expiresAt: Date.now() + 15 * 60 * 1000,
+    attempts: 0
   });
   await writeStore(store);
 
@@ -197,18 +211,28 @@ export async function verifyResetToken(email: string, code: string): Promise<boo
     const user = await remoteTables().users.filter({ email: normalizedEmail }).getFirst();
     const resetCodeHash = user?.preferences?.resetCodeHash;
     const resetExpiresAt = user?.preferences?.resetExpiresAt;
-    return typeof resetCodeHash === "string" && typeof resetExpiresAt === "number" && resetExpiresAt >= Date.now() && await bcrypt.compare(cleanCode, resetCodeHash);
+    const resetAttempts = user?.preferences?.resetAttempts;
+    if (!user || typeof resetCodeHash !== "string" || typeof resetExpiresAt !== "number" || resetExpiresAt < Date.now() || (typeof resetAttempts === "number" && resetAttempts >= RESET_MAX_ATTEMPTS)) return false;
+    const valid = await bcrypt.compare(cleanCode, resetCodeHash);
+    if (!valid) {
+      await remoteTables().users.update(user.id, {
+        preferences: { ...(user.preferences || {}), resetAttempts: (typeof resetAttempts === "number" ? resetAttempts : 0) + 1 }
+      });
+    }
+    return valid;
   }
   if (process.env.NODE_ENV === "production") return false;
   const store = await readStore();
 
   // 1. Check in-memory / file store
   const token = store.resetTokens.find((item) => item.email === normalizedEmail);
-  if (token && token.expiresAt >= Date.now() && await bcrypt.compare(cleanCode, token.codeHash)) {
-    return true;
+  if (!token || token.expiresAt < Date.now() || token.attempts >= RESET_MAX_ATTEMPTS) return false;
+  const valid = await bcrypt.compare(cleanCode, token.codeHash);
+  if (!valid) {
+    token.attempts += 1;
+    await writeStore(store);
   }
-
-  return false;
+  return valid;
 }
 
 export async function resetPassword(email: string, code: string, password: string): Promise<boolean> {
@@ -223,6 +247,7 @@ export async function resetPassword(email: string, code: string, password: strin
     const preferences = { ...(user.preferences || {}) };
     delete preferences.resetCodeHash;
     delete preferences.resetExpiresAt;
+    delete preferences.resetAttempts;
     await users.update(user.id, { password: await bcrypt.hash(password, 12), preferences });
     return true;
   }

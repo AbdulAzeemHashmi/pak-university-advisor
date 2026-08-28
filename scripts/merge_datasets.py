@@ -2,6 +2,21 @@ import csv
 import json
 import re
 import os
+import sys
+from datetime import datetime, timezone
+
+ALLOW_DERIVED_FIELDS = "--allow-derived-fields" in sys.argv
+
+def require_source_value(value, field_name, university_name):
+    """Do not silently turn a missing source field into a plausible fact."""
+    if value:
+        return value
+    if ALLOW_DERIVED_FIELDS:
+        return ""
+    raise ValueError(
+        f"Missing authoritative {field_name} for {university_name}. "
+        "Fix the source data, or use --allow-derived-fields only for a clearly labelled development dataset."
+    )
 
 def clean_string(val):
     if not val:
@@ -10,10 +25,10 @@ def clean_string(val):
 
 def clean_website(website_raw, name_clean):
     if not website_raw:
-        return f"https://www.{name_clean}.edu.pk"
+        return f"https://www.{name_clean}.edu.pk" if ALLOW_DERIVED_FIELDS else ""
     w = website_raw.strip()
     if "under" in w.lower() or "xyz" in w.lower() or "hec.gov.pk" in w.lower() and "http" not in w:
-        return f"https://www.{name_clean}.edu.pk"
+        return f"https://www.{name_clean}.edu.pk" if ALLOW_DERIVED_FIELDS else ""
     if not w.startswith("http://") and not w.startswith("https://"):
         return "https://" + w
     return w
@@ -75,6 +90,8 @@ URDU_NAME_MAP = {
 
 def merge_datasets():
     print("Starting dataset merging and cleaning pipeline...")
+    if ALLOW_DERIVED_FIELDS:
+        print("WARNING: derived placeholder fields are enabled. This output must not be published as verified university data.")
     
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     file1 = os.path.join(base_dir, "universities.csv")
@@ -115,9 +132,9 @@ def merge_datasets():
                 latitude_str = clean_string(row.get("Latitude"))
                 longitude_str = clean_string(row.get("Longitude"))
                 chartered_by = clean_string(row.get("Chartered By")) or "Government of Pakistan"
-                city = clean_string(row.get("City")) or "Islamabad"
-                province = clean_string(row.get("Province")) or "Punjab"
-                sector = clean_string(row.get("Sector")) or "Public"
+                city = require_source_value(clean_string(row.get("City")), "city", name)
+                province = require_source_value(clean_string(row.get("Province")), "province", name)
+                sector = require_source_value(clean_string(row.get("Sector")), "sector", name)
                 uni_type = "Public" if "public" in sector.lower() else "Private"
                 distance_edu = clean_string(row.get("Distance Education"))
                 has_distance_edu = True if distance_edu.lower() == "yes" else False
@@ -150,7 +167,7 @@ def merge_datasets():
                 image_url = clean_image_url(row.get("Image URL"))
                 phone, email = extract_phone_and_email(contact_info)
 
-                # Fee estimation logic (in PKR per year) based on sector & reputation
+                # These are historical development estimates, never authoritative fees.
                 fee_max = 60000 if uni_type == "Public" else 350000
                 if "lums" in name_low or "aga khan" in name_low:
                     fee_max = 1200000
@@ -198,16 +215,19 @@ def merge_datasets():
                     "latitude": latitude,
                     "longitude": longitude,
                     "distance_education": has_distance_edu,
-                    "phone": phone or "+92-51-111-000-111",
-                    "email": email or f"info@{name_domain}.edu.pk",
+                    "phone": phone,
+                    "email": email,
                     "ranking": ranking,
                     "fee_range_max": fee_max,
                     "has_hec_scholarship": has_hec,
                     "has_usaid_scholarship": has_usaid,
                     "scholarship_programs": [],
-                    "financial_aid_office": contact_info or f"Financial Aid Office, {name}, {city}. Email: financialaid@{name_domain}.edu.pk | Phone: +92-51-111-000-111",
+                    "financial_aid_office": contact_info,
                     "scholarship_details": "Scholarship availability and coverage must be verified with the university financial aid office.",
-                    "programs": progs
+                    "programs": progs,
+                    "fee_is_estimated": True,
+                    "programs_are_inferred": True,
+                    "generated_at": datetime.now(timezone.utc).isoformat()
                 })
 
     # Save JSON
@@ -216,7 +236,7 @@ def merge_datasets():
 
     # Save CSV
     if records:
-        headers = ["id", "name", "name_urdu", "city", "province", "type", "category", "campuses", "chartered_by", "established_year", "website", "image_url", "google_map_url", "distance_education", "phone", "email", "ranking", "fee_range_max", "has_hec_scholarship", "has_usaid_scholarship", "financial_aid_office", "scholarship_details"]
+        headers = ["id", "name", "name_urdu", "city", "province", "type", "category", "campuses", "chartered_by", "established_year", "website", "image_url", "google_map_url", "distance_education", "phone", "email", "ranking", "fee_range_max", "has_hec_scholarship", "has_usaid_scholarship", "financial_aid_office", "scholarship_details", "fee_is_estimated", "programs_are_inferred", "generated_at"]
         with open(output_csv, 'w', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
             writer.writerow(headers + ["programs", "scholarship_programs"])
@@ -227,7 +247,7 @@ def merge_datasets():
                     r["website"], r["image_url"], r["google_map_url"], r["distance_education"],
                     r["phone"], r["email"], r["ranking"], r["fee_range_max"],
                     r["has_hec_scholarship"], r["has_usaid_scholarship"],
-                    r["financial_aid_office"], r["scholarship_details"],
+                    r["financial_aid_office"], r["scholarship_details"], r["fee_is_estimated"], r["programs_are_inferred"], r["generated_at"],
                     ",".join(r["programs"]), ",".join(r["scholarship_programs"])
                 ])
 

@@ -73,27 +73,14 @@ function ResetPasswordForm() {
       return;
     }
 
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
+    if (password.length < 12 || !/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/\d/.test(password)) {
+      setError("Password must have at least 12 characters, including uppercase, lowercase, and a number.");
       return;
     }
 
     setLoading(true);
 
     try {
-      // 1. Verify OTP code via API
-      const verifyRes = await fetch(
-        `/api/auth/forgot-password?email=${encodeURIComponent(email)}&code=${code}`
-      );
-      const verifyJson = await verifyRes.json();
-
-      if (!verifyJson.valid) {
-        setError(verifyJson.error || "Invalid or expired reset code. Please request a new one.");
-        setLoading(false);
-        return;
-      }
-
-      // 2. Submit new password to reset-password API endpoint
       const updateRes = await fetch("/api/auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -137,7 +124,7 @@ function ResetPasswordForm() {
         <div className="bg-amber-50 border border-amber-300 rounded-xl p-3 flex items-start gap-2">
           <Info className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
           <p className="text-xs text-amber-800">
-            <strong>Reset Link Loaded:</strong> Code verified from link. Enter your new password below.
+            <strong>Reset details loaded:</strong> Enter your new password below to submit the reset code.
           </p>
         </div>
       )}
