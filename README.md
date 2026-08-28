@@ -41,9 +41,7 @@ Choosing a university in Pakistan means digging through dozens of websites for f
 | Scholarship Fallback | When no direct match exists, surface HEC and USAID scholarship pathway institutions |
 | AI Advisor | Get personalized bilingual recommendations powered by OpenRouter |
 | Side by Side Comparison | Compare universities on fees, programs, rankings, location, and aid |
-| Shortlists | Save promising universities to a personal shortlist |
 | English and Urdu | Full bilingual support with right to left Urdu layouts |
-| Accounts | Register, sign in, manage your profile, and reset your password |
 | Smart Search | Recognizes acronyms like FAST, NUCES, NUST, LUMS, UET, COMSATS, GIKI, IBA, GCU, and more |
 
 ---
@@ -59,8 +57,7 @@ flowchart LR
     D -->|No| F[Scholarship Options]
     E --> G[Compare]
     F --> G
-    G --> H[Add to Shortlist]
-    H --> I[Get AI Recommendation]
+    G --> I[Get AI Recommendation]
 ```
 
 ---
@@ -74,9 +71,7 @@ flowchart LR
 | Components | Radix UI, shadcn/ui patterns, Lucide React icons |
 | Routing and i18n | next-intl, locale routes for `en` and `ur`, full RTL support |
 | Data | Processed CSV and JSON university datasets, local data access layer |
-| Auth | Auth.js v5, JWT sessions, stateless HMAC OTP password reset |
 | AI | OpenRouter API (free Gemini model) with bilingual local fallback |
-| Email | Resend API for password reset delivery, on screen OTP fallback |
 | Deployment | Vercel with `/tmp` storage adapter for serverless filesystem compatibility |
 | Dev Tools | ESLint, TypeScript strict mode, Python data preparation scripts |
 
@@ -119,11 +114,7 @@ Open [http://localhost:3000](http://localhost:3000). Locale routes are at `/en` 
 Create a `.env.local` file for external services. The app has local fallbacks for most features, so you can explore the interface without every key configured.
 
 ```env
-AUTH_SECRET=replace-with-a-long-random-secret
 OPENROUTER_API_KEY=your-openrouter-key
-RESEND_API_KEY=your-resend-key
-RESEND_FROM_EMAIL=Pak University Advisor <no-reply@your-verified-domain.example>
-NEXT_PUBLIC_APP_URL=https://pak-university-advisor.vercel.app
 XATA_DATABASE_URL=your-xata-database-url
 XATA_API_KEY=your-xata-api-key
 ```
@@ -131,10 +122,7 @@ XATA_API_KEY=your-xata-api-key
 ### Configuration Notes
 
 - `OPENROUTER_API_KEY` enables real AI recommendations. Without it, a bilingual heuristic response from local data is returned.
-- `XATA_DATABASE_URL` and `XATA_API_KEY` are mandatory in production. Accounts and shortlists are stored in Xata; local filesystem storage is development-only because Vercel instances are ephemeral.
-- `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, and `NEXT_PUBLIC_APP_URL` are required for production password-reset email. Verify the sender domain in Resend. Reset codes are never returned or logged in production.
-- `AUTH_SECRET` signs Auth.js JWT sessions. Use a long, random string in production.
-- Before deploying account features, set `XATA_DATABASE_URL`, `XATA_API_KEY`, and `AUTH_SECRET` in Vercel for the Production environment, apply `xata/schema.ts`, then check `/api/health/auth`. It returns only readiness and missing variable names, never secret values.
+- Xata is optional for university-data workflows; the public application reads the processed local dataset.
 - Never commit `.env.local` or expose server only keys in client code.
 
 ---
@@ -146,10 +134,6 @@ XATA_API_KEY=your-xata-api-key
 | `/api/universities` | `GET` | Search, filter, and paginate universities |
 | `/api/scholarships` | `GET` | Return scholarship linked institutions |
 | `/api/ai-recommend` | `POST` | Generate a personalized bilingual recommendation |
-| `/api/shortlist` | `GET`, `POST`, `DELETE` | Read and update a user shortlist |
-| `/api/auth/[...nextauth]` | Auth.js | Session and credential authentication |
-| `/api/auth/forgot-password` | `POST`, `GET` | Request and verify reset OTPs |
-| `/api/auth/reset-password` | `POST` | Complete a password reset |
 
 ---
 
@@ -167,19 +151,16 @@ pak-university-advisor/
 +-- src/
 |   +-- app/
 |   |   +-- [locale]/               # Localized English and Urdu pages
-|   |   |   +-- auth/               # Login, signup, and password reset flows
 |   |   |   +-- compare/            # Side by side comparison page
-|   |   |   +-- profile/            # User profile and sign out
-|   |   |   +-- shortlist/          # Saved universities
 |   |   |   +-- universities/       # Search and filtering
 |   |   |   +-- page.tsx            # Home page
-|   |   +-- api/                    # AI, auth, shortlist, and university APIs
+|   |   +-- api/                    # AI and university APIs
 |   |   +-- globals.css             # Global theme, RTL, glass UI, and animations
 |   |   +-- layout.tsx              # Root application layout
 |   +-- components/                 # Feature components and UI primitives
 |   +-- hooks/                      # Shared React hooks
 |   +-- i18n/                       # Routing and translation configuration
-|   +-- lib/                        # Data layer, Auth.js, and utility modules
+|   +-- lib/                        # Data layer and utility modules
 |   +-- messages/                   # en.json and ur.json translation files
 |   +-- types/                      # Shared TypeScript models
 +-- next.config.ts
