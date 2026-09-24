@@ -25,7 +25,7 @@ function cleanTextForHumanFormat(text: string): string {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { budget, location, degree, academicMarks } = body;
+    const { budget, location, degree, academicMarks, language: clientLang } = body;
 
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
     const now = Date.now();
@@ -55,6 +55,11 @@ export async function POST(request: NextRequest) {
     const degStr = degree || "Computer Science";
     const marksStr = academicMarks ? `(Academic Record: ${academicMarks})` : "";
 
+    // Determine target language (ur if explicit ur or Urdu script found, otherwise en)
+    const allInputText = `${locStr} ${degStr} ${marksStr}`;
+    const hasUrduScript = /[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]/.test(allInputText);
+    const targetLang = (clientLang === "ur" || hasUrduScript) ? "ur" : "en";
+
     // Query dataset to ground the AI response
     const searchData = await fetchUniversities({
       city: locStr !== "All" ? locStr : undefined,
@@ -70,6 +75,10 @@ export async function POST(request: NextRequest) {
 
     if (openRouterApiKey) {
       try {
+        const langInstructions = targetLang === "ur"
+          ? "CRITICAL SINGLE-LANGUAGE RULE: You MUST formulate your entire response COMPLETELY and EXCLUSIVELY in URDU script (اردو زبان). Do not include any English section."
+          : "CRITICAL SINGLE-LANGUAGE RULE: You MUST formulate your entire response COMPLETELY and EXCLUSIVELY in ENGLISH. Do not include any Urdu section or Urdu text.";
+
         const prompt = `You are Pak University Advisor, an expert career counselor for Pakistani students.
 Student Profile:
 - Annual Fee Budget: PKR ${numBudget.toLocaleString()}
@@ -85,9 +94,8 @@ ${scholarshipNames ? "- " + scholarshipNames : "HEC Need-Based and USAID MNBSP G
 
 CRITICAL FORMATTING INSTRUCTION: Do NOT use markdown symbols like '#', '##', '###', do NOT use asterisks '*' or '**', and do NOT use en dashes (–) or em dashes (—). Present all recommendations like clean human-written text.
 
-Please provide a helpful, encouraging, and structured recommendation in TWO sections:
-1. English Section: Clear analysis, top 2-3 university recommendations, fee structure, and scholarship advice.
-2. Urdu Section (اردو میں تفصیلی مشورہ): The exact same recommendation written in clear, natural Urdu.`;
+${langInstructions}
+Provide a clear analysis, top 2-3 university recommendations, fee structure, and scholarship advice in only the requested language.`;
 
         const openRouterResp = await fetch("https://openrouter.ai/api/v1/chat/completions", {
           method: "POST",
@@ -118,7 +126,7 @@ Please provide a helpful, encouraging, and structured recommendation in TWO sect
       }
     }
 
-    // Heuristic bilingual fallback response if API key is not present or OpenRouter call fails
+    // Heuristic single-language fallback response if API key is not present or OpenRouter call fails
     const englishText = `🎓 Personalized Academic Recommendation
 
 Based on your budget of PKR ${numBudget.toLocaleString()} / year for ${degStr} in ${locStr}:
@@ -147,9 +155,9 @@ ${(searchData.scholarshipOptions || []).slice(0, 3).map(u => `• ${u.name} (${u
 ۲. ۱۰۰٪ ٹیوشن فیس کے ساتھ ماہانہ وظیفہ بھی فراہم کیا جائے گا۔
 ۳. این ٹی ایس (NTS) اور یونیورسٹی کے اینٹری ٹیسٹ کی تیاری شروع کریں۔`;
 
-    const combinedRecommendation = `${englishText}\n\n${urduText}`;
+    const selectedRecommendation = targetLang === "ur" ? urduText : englishText;
 
-    return NextResponse.json({ recommendation: cleanTextForHumanFormat(combinedRecommendation) });
+    return NextResponse.json({ recommendation: cleanTextForHumanFormat(selectedRecommendation) });
   } catch (error) {
     console.error("Error in /api/ai-recommend:", error);
     return NextResponse.json({ error: "Failed to generate AI recommendation" }, { status: 500 });

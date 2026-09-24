@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { University } from "@/types";
 import UniversityDetailModal from "./UniversityDetailModal";
 import { formatPKR } from "@/lib/utils";
@@ -39,12 +39,37 @@ interface AIAdvisorModalProps {
   defaultBudget?: number;
 }
 
-const PRESET_PROMPTS = [
+const PRESET_PROMPTS_EN = [
   { label: "🎓 Low cost CS in Lahore under 2.5 Lakh", query: "Suggest low fee private and public universities for Computer Science in Lahore under 250000 PKR." },
   { label: "💰 HEC Need-Based Scholarships in Punjab", query: "Which universities in Punjab offer 100% HEC Need-Based Scholarships?" },
   { label: "🏛️ FAST vs NUST comparison", query: "Compare FAST NUCES and NUST Islamabad for Computer Science and Software Engineering." },
   { label: "🩺 Medical & Nursing colleges in KPK", query: "What are the top public and private medical or health science universities in Khyber Pakhtunkhwa?" }
 ];
+
+const PRESET_PROMPTS_UR = [
+  { label: "🎓 لاہور میں کم فیس کمپیوٹر سائنس", query: "لاہور میں ڈھائی لاکھ سالانہ سے کم فیس والی کمپیوٹر سائنس کی یونیورسٹیاں بتائیں۔" },
+  { label: "💰 پنجاب میں ایچ ای سی اسکالرشپس", query: "پنجاب کی کن یونیورسٹیوں میں ۱۰۰ فیصد ایچ ای سی نیڈ بیسڈ اسکالرشپ دستیاب ہے؟" },
+  { label: "🏛️ فاسٹ بمقابلہ نسٹ موازنہ", query: "کمپیوٹر سائنس کے لیے فاسٹ اور نسٹ اسلام آباد کا تقابل کریں۔" },
+  { label: "🩺 کے پی کے میں میڈیکل کالجز", query: "خیبر پختونخوا کے بہترین پبلک اور پرائیویٹ میڈیکل کالجز کون سے ہیں؟" }
+];
+
+function getWelcomeMessage(isUrdu: boolean): string {
+  if (isUrdu) {
+    return `السلام علیکم! میں آپ کا پاک یونیورسٹی اے آئی کونسلر ہوں۔\n\nمجھ سے پاکستانی یونیورسٹیوں، فیسوں، ایچ ای سی / یو ایس ایڈ اسکالرشپس یا ڈگری پروگراموں کے بارے میں اردو میں کوئی بھی سوال پوچھیں۔\n\nتمام سفارشات مصدقہ ریکارڈز پر مبنی ہیں۔ براہ کرم فیس، داخلوں اور اسکالرشپ کی شرائط کی متعلقہ یونیورسٹی کی آفیشل ویب سائٹ سے تصدیق کریں۔`;
+  }
+  return `Hello! I am your Pak University AI Counselor.\n\nAsk me any question in English about Pakistani universities, tuition fees, HEC/USAID scholarships, or degree programs.\n\nRecommendations are based on retrieved local records. Please confirm changing fees, admissions, and scholarship terms on official websites.`;
+}
+
+function detectPromptLanguage(text: string, currentLocale: string): "ur" | "en" {
+  const urduMatches = text.match(/[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]/g);
+  if (urduMatches && urduMatches.length >= 2) {
+    return "ur";
+  }
+  if (currentLocale === "ur" && !/[a-zA-Z]/.test(text)) {
+    return "ur";
+  }
+  return "en";
+}
 
 export default function AIAdvisorModal({
   isOpen,
@@ -53,13 +78,15 @@ export default function AIAdvisorModal({
   defaultDegree = "Computer Science"
 }: AIAdvisorModalProps) {
   const t = useTranslations("aiModal");
+  const locale = useLocale();
+  const isUrduLocale = locale === "ur";
 
   const [inputMessage, setInputMessage] = useState("");
-  const [messages, setMessages] = useState<ChatMessage[]>([
+  const [messages, setMessages] = useState<ChatMessage[]>(() => [
     {
       id: "welcome-msg",
       role: "assistant",
-      content: `السلام علیکم! I am your Pak University RAG AI Counselor.\n\nAsk me any question in English, Urdu (اردو), or Roman Urdu about Pakistani universities, tuition fees, HEC/USAID scholarships, or degree programs.\n\nRecommendations are based on retrieved local records. Please confirm changing fees, admissions, and scholarship terms on official websites.`,
+      content: getWelcomeMessage(locale === "ur"),
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
     }
   ]);
@@ -67,6 +94,23 @@ export default function AIAdvisorModal({
   const [selectedUniForDetail, setSelectedUniForDetail] = useState<University | null>(null);
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  // Update welcome message if user toggles language and no user messages sent yet
+  useEffect(() => {
+    setMessages(prev => {
+      if (prev.length === 1 && prev[0].id === "welcome-msg") {
+        return [
+          {
+            id: "welcome-msg",
+            role: "assistant",
+            content: getWelcomeMessage(isUrduLocale),
+            timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+          }
+        ];
+      }
+      return prev;
+    });
+  }, [isUrduLocale]);
 
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -79,6 +123,8 @@ export default function AIAdvisorModal({
   const handleSendMessage = async (queryText?: string) => {
     const textToSend = queryText || inputMessage;
     if (!textToSend.trim() || loading) return;
+
+    const detectedLang = detectPromptLanguage(textToSend.trim(), locale);
 
     const userMsg: ChatMessage = {
       id: `user-${Date.now()}`,
@@ -103,7 +149,8 @@ export default function AIAdvisorModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: userMsg.content,
-          history: historyPayload
+          history: historyPayload,
+          language: detectedLang
         })
       });
 
@@ -119,24 +166,30 @@ export default function AIAdvisorModal({
         setMessages(prev => [...prev, botMsg]);
       } else {
         const errData = await res.json();
+        const defaultErrMsg = detectedLang === "ur" 
+          ? "معذرت، جواب حاصل کرنے میں دشواری پیش آئی ہے۔ براہ کرم دوبارہ کوشش کریں۔" 
+          : "Unable to retrieve response. Please try again.";
         setMessages(prev => [
           ...prev,
           {
             id: `err-${Date.now()}`,
             role: "assistant",
-            content: `Sorry, an error occurred: ${errData.error || "Unable to retrieve response."}`,
+            content: errData.error || defaultErrMsg,
             timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
           }
         ]);
       }
     } catch (err) {
       console.error("RAG chat error:", err);
+      const networkErrMsg = detectedLang === "ur"
+        ? "نیٹ ورک یا سرور رابطہ منقطع ہو گیا۔ براہ کرم اپنا انٹرنیٹ چیک کریں۔"
+        : "Sorry, network or server connection failed. Please try again.";
       setMessages(prev => [
         ...prev,
         {
           id: `err-${Date.now()}`,
           role: "assistant",
-          content: "Sorry, network or server connection failed. Please try again.",
+          content: networkErrMsg,
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
         }
       ]);
@@ -150,7 +203,9 @@ export default function AIAdvisorModal({
       {
         id: "welcome-msg-reset",
         role: "assistant",
-        content: `Chat history reset. How else can I assist your university search today?`,
+        content: isUrduLocale 
+          ? "چیٹ ہسٹری ری سیٹ ہو گئی ہے۔ میں یونیورسٹی کے انتخاب میں آپ کی مزید کیا مدد کر سکتا ہوں؟"
+          : "Chat history reset. How else can I assist your university search today?",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
       }
     ]);
@@ -170,7 +225,7 @@ export default function AIAdvisorModal({
               <div>
                 <div className="flex items-center gap-2">
                   <h2 className="font-black text-base sm:text-lg text-white">
-                    RAG AI University Counselor
+                    {isUrduLocale ? "پاک یونیورسٹی اے آئی کونسلر" : "RAG AI University Counselor"}
                   </h2>
                   <span className="text-[10px] bg-amber-400 text-[#01411C] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider flex items-center gap-1 shadow-sm">
                     <Sparkles className="w-3 h-3 fill-[#01411C]" />
@@ -178,7 +233,9 @@ export default function AIAdvisorModal({
                   </span>
                 </div>
                 <p className="text-xs text-emerald-100/90 font-medium">
-                  Instant Fact-Grounded Admissions & Scholarship Q&A • انگریزی و اردو
+                  {isUrduLocale 
+                    ? "مصدقہ ڈیٹاسیٹ اور اسکالرشپ رہنمائی • مکمل یک زبانی جوابات"
+                    : "Instant Fact-Grounded Admissions & Scholarship Q&A • English & Urdu"}
                 </p>
               </div>
             </div>
@@ -186,7 +243,7 @@ export default function AIAdvisorModal({
             <div className="flex items-center gap-1 sm:gap-2">
               <button
                 onClick={handleResetChat}
-                title="Reset Chat"
+                title={isUrduLocale ? "چیٹ ری سیٹ کریں" : "Reset Chat"}
                 className="p-2 text-emerald-100 hover:text-white rounded-full hover:bg-white/10 transition-colors"
               >
                 <RotateCcw className="w-4 h-4" />
@@ -204,9 +261,9 @@ export default function AIAdvisorModal({
           <div className="bg-slate-100/80 px-4 py-2.5 border-b border-slate-200 overflow-x-auto flex items-center gap-2 text-xs scrollbar-none">
             <div className="flex items-center gap-1 text-[#01411C] font-extrabold whitespace-nowrap text-[11px] mr-1">
               <Lightbulb className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
-              <span>Try asking:</span>
+              <span>{isUrduLocale ? "تجویز کردہ سوالات:" : "Try asking:"}</span>
             </div>
-            {PRESET_PROMPTS.map((prompt, idx) => (
+            {(isUrduLocale ? PRESET_PROMPTS_UR : PRESET_PROMPTS_EN).map((prompt, idx) => (
               <button
                 key={idx}
                 onClick={() => handleSendMessage(prompt.query)}
@@ -335,7 +392,11 @@ export default function AIAdvisorModal({
                 </div>
                 <div className="bg-white border border-slate-200 rounded-2xl rounded-tl-none p-4 shadow-xs flex items-center gap-2 text-xs text-slate-600">
                   <Loader2 className="w-4 h-4 animate-spin text-[#01411C]" />
-                  <span>Searching vector index & formatting fact-grounded response...</span>
+                  <span>
+                    {isUrduLocale 
+                      ? "ڈیٹا بیس سے مصدقہ ریکارڈ تلاش کیے جا رہے ہیں..."
+                      : "Searching vector index & formatting fact-grounded response..."}
+                  </span>
                 </div>
               </div>
             )}
@@ -354,7 +415,11 @@ export default function AIAdvisorModal({
                 type="text"
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
-                placeholder="Ask in English or Urdu (e.g. Lowest fee CS in Lahore with scholarship)..."
+                placeholder={
+                  isUrduLocale 
+                    ? "اردو یا انگریزی میں سوال لکھیں (مثلاً لاہور میں کم فیس والی یونیورسٹیاں)..."
+                    : "Ask in English or Urdu (e.g. Lowest fee CS in Lahore with scholarship)..."
+                }
                 disabled={loading}
                 className="flex-1 bg-slate-100 hover:bg-slate-50 focus:bg-white text-slate-900 border border-slate-200 focus:border-emerald-600 rounded-2xl px-4 py-3 text-xs sm:text-sm focus:outline-none transition-all"
               />
@@ -367,7 +432,7 @@ export default function AIAdvisorModal({
                   <Loader2 className="w-4 h-4 animate-spin text-amber-300" />
                 ) : (
                   <>
-                    <span>Ask RAG</span>
+                    <span>{isUrduLocale ? "سوال پوچھیں" : "Ask RAG"}</span>
                     <Send className="w-4 h-4 text-amber-300" />
                   </>
                 )}
